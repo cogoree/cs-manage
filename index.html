@@ -248,7 +248,7 @@
     <nav>
       <div class="nav-wrapper">
         <span class="brand-logo">
-          <i class="material-icons left">headset_mic</i>easyCS Manager
+          <i class="material-icons left">headset_mic</i>CS Manager
           <span>
             <span style="font-size: 0.9rem; font-weight: 500; background: rgba(255,255,255,0.2); padding: 6px 15px; border-radius: 20px; margin-left: 20px; vertical-align: middle; letter-spacing: 0;">
                 <i class="material-icons" style="font-size: 1.1rem; vertical-align: middle; margin-right: 5px;">mic_none</i>Alt + R (녹음) / Alt + F (검색)
@@ -450,7 +450,7 @@
         document.getElementById('searchEnd').value = today;
         document.getElementById('statStart').value = today.substring(0, 4) + "-01-01";
         document.getElementById('statEnd').value = today;
-        google.script.run.withSuccessHandler(initData).getInitialData();
+        gasCall("getInitialData", null, initData);
         
         if ('webkitSpeechRecognition' in window) {
           recognition = new webkitSpeechRecognition();
@@ -548,8 +548,8 @@
       }
       function stopVoiceUI() { isRecognizing = false; if(currentCaptionId) { var caption = document.getElementById(currentCaptionId); if(caption) { caption.innerText = ""; caption.classList.remove('active'); } } currentTargetId = null; currentCaptionId = null; document.querySelectorAll('.mic-btn').forEach(el => el.classList.remove('listening')); if (isTimerRunning) toggleTimer(); }
 
-      function requestAiSummary() { var content = document.getElementById('inContent').value; if (!content || content.trim().length < 5) return alert("분석할 통화 내용이 부족합니다."); var aiBtn = document.getElementById('btn-ai'); aiBtn.classList.add('loading'); google.script.run.withSuccessHandler(function(result) { aiBtn.classList.remove('loading'); if(result.startsWith("Error") || result.startsWith("AI 호출") || result.startsWith("❌")) { alert(result); return; } parseAndFillAiResult(result); M.toast({html: '✨ AI 분석 및 자동분류가 완료되었습니다!', classes: 'rounded'}); }).withFailureHandler(function(e){ aiBtn.classList.remove('loading'); alert("오류: "+e.message); }).callGemini(content); }
-      function handleFileUpload(input) { var file = input.files[0]; if(!file) return; if(file.size > 20 * 1024 * 1024) { alert("파일 크기가 너무 큽니다. (20MB 이하 권장)"); input.value = ""; return; } var reader = new FileReader(); var aiBtn = document.getElementById('btn-ai'); aiBtn.classList.add('loading'); M.toast({html: '📂 파일 업로드 중...'}); reader.onload = function(e) { var base64Data = e.target.result.split(',')[1]; var mimeType = file.type; var audioPayload = { mimeType: mimeType, data: base64Data }; google.script.run.withSuccessHandler(function(result) { aiBtn.classList.remove('loading'); input.value = ""; if(result.startsWith("Error") || result.startsWith("AI 호출") || result.startsWith("❌")) { alert(result); return; } document.getElementById('inContent').value = "[📂 오디오 파일 분석 결과]\n파일명: " + file.name; parseAndFillAiResult(result); alert("✨ 녹음 파일 분석 완료!"); }).withFailureHandler(function(e){ aiBtn.classList.remove('loading'); input.value=""; alert("오류: "+e.message); }).callGemini(audioPayload); }; reader.readAsDataURL(file); }
+      function requestAiSummary() { var content = document.getElementById('inContent').value; if (!content || content.trim().length < 5) return alert("분석할 통화 내용이 부족합니다."); var aiBtn = document.getElementById('btn-ai'); aiBtn.classList.add('loading'); gasCall("callGemini", content, function(result){ aiBtn.classList.remove('loading'); if(result.startsWith("Error") || result.startsWith("AI 호출") || result.startsWith("❌")) { alert(result); return; } parseAndFillAiResult(result); M.toast({html: '✨ AI 분석 및 자동분류가 완료되었습니다!', classes: 'rounded'}); }, function(e){ aiBtn.classList.remove('loading'); alert("오류: "+e.message); }); }
+      function handleFileUpload(input) { var file = input.files[0]; if(!file) return; if(file.size > 20 * 1024 * 1024) { alert("파일 크기가 너무 큽니다. (20MB 이하 권장)"); input.value = ""; return; } var reader = new FileReader(); var aiBtn = document.getElementById('btn-ai'); aiBtn.classList.add('loading'); M.toast({html: '📂 파일 업로드 중...'}); reader.onload = function(e) { var base64Data = e.target.result.split(',')[1]; var mimeType = file.type; var audioPayload = { mimeType: mimeType, data: base64Data }; gasCall("callGemini", audioPayload, function(result){ aiBtn.classList.remove('loading'); input.value = ""; if(result.startsWith("Error") || result.startsWith("AI 호출") || result.startsWith("❌")) { alert(result); return; } document.getElementById('inContent').value = "[📂 오디오 파일 분석 결과]\n파일명: " + file.name; parseAndFillAiResult(result); alert("✨ 녹음 파일 분석 완료!"); }, function(e){ aiBtn.classList.remove('loading'); input.value=""; alert("오류: "+e.message); }); }; reader.readAsDataURL(file); }
       
       function fuzzySelect(selectId, targetText) { if (!targetText || targetText.trim() === "" || targetText.includes("알수없음")) return false; var sel = document.getElementById(selectId); if (!sel) return false; var t = targetText.toLowerCase().replace(/\s/g, ''); for (var i = 0; i < sel.options.length; i++) { var optVal = sel.options[i].value.toLowerCase().replace(/\s/g, ''); if (optVal && (optVal.includes(t) || t.includes(optVal))) { sel.selectedIndex = i; return true; } } return false; }
       function cleanText(str) { return str ? str.replace(/\*\*/g, '').trim() : ""; }
@@ -572,16 +572,16 @@
         var row = JSON.parse(decodeURIComponent(rowStr)); var hosp = row.hospital || "고객"; var caller = row.caller || "담당자"; var q = row.content || ""; var a = row.answer || ""; var prod = row.product || "";
         var originalText = btnElement.innerText; btnElement.innerText = "생성 중..."; btnElement.disabled = true; 
         M.toast({html: '🤖 AI가 고객 맞춤형 안내 가이드를 작성 중입니다...'});
-        google.script.run.withSuccessHandler(function(aiResult) {
+        gasCall("generateFaqByAI", {question: q, answer: a, product: prod, hospital: hosp, caller: caller}, function(aiResult){
             btnElement.innerText = originalText; btnElement.disabled = false;
             if(aiResult.startsWith("❌ AI 응답 실패") || aiResult.startsWith("Conn Error") || aiResult.startsWith("Error")) { alert(aiResult); return; }
             navigator.clipboard.writeText(aiResult).then(function() { M.toast({html: '📋 AI 안내 가이드가 복사되었습니다!', classes: 'rounded green'}); });
-        }).withFailureHandler(function(err){ btnElement.innerText = originalText; btnElement.disabled = false; alert("오류: " + err.message); }).generateFaqByAI(q, a, prod, hosp, caller);
+        }, function(err){ btnElement.innerText = originalText; btnElement.disabled = false; alert("오류: " + err.message); });
       }
 
       function loadTodoList() { 
         var div = document.getElementById('todoListArea'); document.getElementById('todoLoader').style.display = 'block'; 
-        google.script.run.withSuccessHandler(function(data){ 
+        gasCall("getMyTodoList", currentUser, function(data){ 
           document.getElementById('todoLoader').style.display = 'none'; 
           if(!data || data.length===0) { div.innerHTML='<div class="center" style="padding:50px;"><i class="material-icons large grey-text text-lighten-2">task_alt</i><br><h5 class="grey-text">할 일이 없습니다. 완벽해요!</h5></div>'; return; } 
           var html = '<table class="log-table"><thead><tr><th style="width:80px; text-align:center;">경과</th><th>병원/날짜</th><th>내용 (질문/답변)</th><th style="width: 140px; min-width:140px;">발신자/번호</th><th style="width: 80px; text-align: center;">상태</th></tr></thead><tbody>'; 
@@ -592,13 +592,13 @@
             var stClass = r.status.includes('임시') ? 'status-temp' : 'status-ing'; 
             html += `<tr onclick="loadToEdit('${rowStr}', 'todoTab')"><td class="center"><span class="d-day-badge" style="${dDayStyle}">${r.dTag}</span></td><td><b>${r.hospital}</b><br><small class="grey-text">${r.date}</small></td><td><div style="font-weight:500; margin-bottom:4px;">Q. ${r.content}</div><div style="color:#558b2f; font-size:0.85rem;">A. ${r.answer || '(답변 없음)'}</div><small class="grey-text">${r.product} / ${r.type}</small></td><td><span style="font-weight:bold;">${r.caller}</span><br><small class="grey-text">${r.callback || '-'}</small></td><td style="text-align:center;"><span class="status-badge ${stClass}">${r.status}</span></td></tr>`; 
           }); html += '</tbody></table>'; div.innerHTML = html; 
-        }).getMyTodoList(currentUser); 
+        }); 
       }
       
       function searchLogs() { 
         var s = document.getElementById('searchStart').value; var e = document.getElementById('searchEnd').value; var ing = document.getElementById('searchOnlyIng').checked; var hosp = document.getElementById('searchHospital').value; var caller = document.getElementById('searchCaller').value; var recv = document.getElementById('searchReceiver').value; 
         var div = document.getElementById('searchResultArea'); div.innerHTML='<div class="progress"><div class="indeterminate"></div></div>'; 
-        google.script.run.withSuccessHandler(function(data){ 
+        gasCall("searchCsLogs", {startDate: s, endDate: e, onlyIng: ing, hospital: hosp, caller: caller, receiver: recv}, function(data){ 
           if(!data || data.length===0) { div.innerHTML='<p class="center grey-text">결과 없음</p>'; return; } 
           var html = '<table class="log-table"><thead><tr><th>병원/날짜</th><th>내용/답변</th><th style="width: 140px; min-width:140px;">발신자/번호</th><th style="width: 80px; text-align: center;">상태</th><th style="width: 100px; text-align: center;">동작</th></tr></thead><tbody>'; 
           data.forEach(r => { 
@@ -610,7 +610,7 @@
             var dispCallback = safeCallback.trim() !== "" ? r.callback : "-";
             html += `<tr onclick="loadToEdit('${rowStr}', 'searchTab')"><td><b>${r.hospital}</b><br><small class="grey-text">${r.date}</small></td><td><div style="font-weight:500; margin-bottom:4px;">Q. ${r.content}</div><div style="color:#558b2f; font-size:0.9rem">A. ${r.answer||''}</div><small class="grey-text">${r.product} (${r.receiver})</small></td><td><span style="font-weight:600">${dispCaller}</span><br><small class="grey-text">${dispCallback}</small></td><td style="text-align:center;"><span class="status-badge ${stClass}">${r.status}</span></td><td style="text-align:center;"><button class="btn-faq" onclick="generateFaq(event, '${rowStr}', this)">FAQ 생성</button></td></tr>`; 
           }); html += '</tbody></table>'; div.innerHTML = html; 
-        }).searchCsLogs(s, e, ing, hosp, caller, recv);
+        });
       }
       
       function loadToEdit(rowStr, sourceTab) { 
@@ -625,9 +625,9 @@
       }
       
       function goBackToList() { cancelEditMode(); var tabs = document.querySelectorAll('.custom-tab'); if (previousTab === 'todoTab') { switchTab('todoTab', tabs[1], false, true); } else { switchTab('searchTab', tabs[2]); searchLogs(); } } 
-      function cancelEditMode() { isEditMode = false; document.getElementById('editModeBar').style.display = 'none'; var btn = document.getElementById('btnSave'); btn.innerText = 'DB에 저장하기'; btn.classList.remove('btn-update'); document.getElementById('editIndex').value = ''; resetEntryForm(); }
-      function deleteData() { var index = document.getElementById('editIndex').value; if(!index) return; if(!confirm('정말 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.')) return; var btn = document.getElementById('btnSave'); btn.disabled = true; btn.innerText = "삭제 중..."; google.script.run.withSuccessHandler(function(res){ btn.disabled = false; btn.innerText = "DB에 저장하기"; if(res === "DELETED") { alert("🗑️ 삭제되었습니다."); goBackToList(); } else { alert("오류: " + res); } }).deleteCsLog(index); }
-      function loadStats() { var start = document.getElementById('statStart').value; var end = document.getElementById('statEnd').value; var hosp = document.getElementById('statHospital').value; var caller = document.getElementById('statCaller').value; var recv = document.getElementById('statReceiver').value; document.getElementById('statLoader').style.display = 'block'; google.script.run.withSuccessHandler(function(stats){ document.getElementById('statLoader').style.display = 'none'; document.getElementById('statTotalCount').innerText = stats.total.toLocaleString() + "건"; document.getElementById('statProcessRate').innerText = stats.rate + "%"; renderChart('chartHospital', 'bar', { labels: stats.topHospitals.map(x => x.label), datasets: [{ label: '문의 건수', data: stats.topHospitals.map(x => x.data), backgroundColor: 'rgba(63, 81, 181, 0.7)', borderColor: 'rgba(63, 81, 181, 1)', borderWidth: 1 }] }, { indexAxis: 'y' }); renderChart('chartCallerGraph', 'bar', { labels: stats.topCallers.map(x => x.label), datasets: [{ label: '문의 건수', data: stats.topCallers.map(x => x.data), backgroundColor: 'rgba(0, 150, 136, 0.7)', borderColor: 'rgba(0, 150, 136, 1)', borderWidth: 1 }] }, { indexAxis: 'y' }); renderChart('chartCategory', 'doughnut', { labels: stats.topCategories.map(x => x.label), datasets: [{ data: stats.topCategories.map(x => x.data), backgroundColor: ['#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3'] }] }); renderChart('chartTrend', 'line', { labels: stats.monthlyTrend.map(x => x.label), datasets: [{ label: '월별 발생 건수', data: stats.monthlyTrend.map(x => x.data), borderColor: '#ff9800', backgroundColor: 'rgba(255, 152, 0, 0.1)', fill: true, tension: 0.3 }] }); }).getDashboardStats(start, end, hosp, caller, recv); }
+      function deleteData() { var index = document.getElementById('editIndex').value; if(!index) return; if(!confirm('정말 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.')) return; var btn = document.getElementById('btnSave'); btn.disabled = true; btn.innerText = "삭제 중..."; gasCall("deleteCsLog", index, function(res){ btn.disabled = false; btn.innerText = "DB에 저장하기"; if(res === "DELETED") { alert("🗑️ 삭제되었습니다."); goBackToList(); } else { alert("오류: " + res); } }); }
+      function loadStats() { var start = document.getElementById('statStart').value; var end = document.getElementById('statEnd').value; var hosp = document.getElementById('statHospital').value; var caller = document.getElementById('statCaller').value; var recv = document.getElementById('statReceiver').value; document.getElementById('statLoader').style.display = 'block'; gasCall("getDashboardStats", {startDate: start, endDate: end, hospital: hosp, caller: caller, receiver: recv}, function(stats){ document.getElementById('statLoader').style.display = 'none'; document.getElementById('statTotalCount').innerText = stats.total.toLocaleString() + "건"; document.getElementById('statProcessRate').innerText = stats.rate + "%"; renderChart('chartHospital', 'bar', { labels: stats.topHospitals.map(x => x.label), datasets: [{ label: '문의 건수', data: stats.topHospitals.map(x => x.data), backgroundColor: 'rgba(63, 81, 181, 0.7)', borderColor: 'rgba(63, 81, 181, 1)', borderWidth: 1 }] }, { indexAxis: 'y' }); renderChart('chartCallerGraph', 'bar', { labels: stats.topCallers.map(x => x.label), datasets: [{ label: '문의 건수', data: stats.topCallers.map(x => x.data), backgroundColor: 'rgba(0, 150, 136, 0.7)', borderColor: 'rgba(0, 150, 136, 1)', borderWidth: 1 }] }, { indexAxis: 'y' }); renderChart('chartCategory', 'doughnut', { labels: stats.topCategories.map(x => x.label), datasets: [{ data: stats.topCategories.map(x => x.data), backgroundColor: ['#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3'] }] }); renderChart('chartTrend', 'line', { labels: stats.monthlyTrend.map(x => x.label), datasets: [{ label: '월별 발생 건수', data: stats.monthlyTrend.map(x => x.data), borderColor: '#ff9800', backgroundColor: 'rgba(255, 152, 0, 0.1)', fill: true, tension: 0.3 }] }); }); }
+      function loadStats() { var start = document.getElementById('statStart').value; var end = document.getElementById('statEnd').value; var hosp = document.getElementById('statHospital').value; var caller = document.getElementById('statCaller').value; var recv = document.getElementById('statReceiver').value; document.getElementById('statLoader').style.display = 'block'; gasCall("getDashboardStats", {startDate: start, endDate: end, hospital: hosp, caller: caller, receiver: recv}, function(stats){ document.getElementById('statLoader').style.display = 'none'; document.getElementById('statTotalCount').innerText = stats.total.toLocaleString() + "건"; document.getElementById('statProcessRate').innerText = stats.rate + "%"; renderChart('chartHospital', 'bar', { labels: stats.topHospitals.map(x => x.label), datasets: [{ label: '문의 건수', data: stats.topHospitals.map(x => x.data), backgroundColor: 'rgba(63, 81, 181, 0.7)', borderColor: 'rgba(63, 81, 181, 1)', borderWidth: 1 }] }, { indexAxis: 'y' }); renderChart('chartCallerGraph', 'bar', { labels: stats.topCallers.map(x => x.label), datasets: [{ label: '문의 건수', data: stats.topCallers.map(x => x.data), backgroundColor: 'rgba(0, 150, 136, 0.7)', borderColor: 'rgba(0, 150, 136, 1)', borderWidth: 1 }] }, { indexAxis: 'y' }); renderChart('chartCategory', 'doughnut', { labels: stats.topCategories.map(x => x.label), datasets: [{ data: stats.topCategories.map(x => x.data), backgroundColor: ['#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3'] }] }); renderChart('chartTrend', 'line', { labels: stats.monthlyTrend.map(x => x.label), datasets: [{ label: '월별 발생 건수', data: stats.monthlyTrend.map(x => x.data), borderColor: '#ff9800', backgroundColor: 'rgba(255, 152, 0, 0.1)', fill: true, tension: 0.3 }] }); }); }
       function renderChart(canvasId, type, data, extraOptions) { var ctx = document.getElementById(canvasId).getContext('2d'); if (canvasId === 'chartHospital' && chartHosp) chartHosp.destroy(); if (canvasId === 'chartCategory' && chartCat) chartCat.destroy(); if (canvasId === 'chartTrend' && chartTrend) chartTrend.destroy(); if (canvasId === 'chartCallerGraph' && chartCallerObj) chartCallerObj.destroy(); var config = { type: type, data: data, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: type !== 'bar', position: 'bottom' } }, ...extraOptions } }; var newChart = new Chart(ctx, config); if (canvasId === 'chartHospital') chartHosp = newChart; if (canvasId === 'chartCategory') chartCat = newChart; if (canvasId === 'chartTrend') chartTrend = newChart; if (canvasId === 'chartCallerGraph') chartCallerObj = newChart; }
       function checkUser() { var saved = localStorage.getItem("csUser"); if(saved) { currentUser = saved; document.getElementById('displayUser').innerText = saved + "님"; document.getElementById('setupOverlay').style.display = 'none'; } else document.getElementById('setupOverlay').style.display = 'flex'; }
       function saveUser() { var name = document.getElementById('setupName').value.trim(); if(!name) return alert('이름을 입력하세요'); localStorage.setItem("csUser", name); currentUser = name; document.getElementById('displayUser').innerText = name + "님"; document.getElementById('setupOverlay').style.display = 'none'; }
@@ -693,9 +693,9 @@
         }; 
         
         var btn = document.getElementById('btnSave'); var orgTxt = btn.innerText; btn.disabled=true; btn.innerText='처리 중...'; 
-        var btnT = document.getElementById('btnTempSave'); if(btnT) btnT.disabled=true;
+        gasCall(isEditMode ? "updateCsLog" : "saveCsLog", form, afterSave);
         
-        var runner = isEditMode ? google.script.run.withSuccessHandler(afterSave).updateCsLog(form) : google.script.run.withSuccessHandler(afterSave).saveCsLog(form); 
+        gasCall(isEditMode ? "updateCsLog" : "saveCsLog", form, afterSave);
         
         function afterSave(res) { 
           btn.disabled=false; btn.innerText=orgTxt; 
@@ -738,7 +738,7 @@
         var resDiv = document.getElementById('quickSearchResult');
         resDiv.innerHTML = '<div class="progress"><div class="indeterminate"></div></div>';
         
-        google.script.run.withSuccessHandler(function(list) {
+        gasCall("getQuickHistory", {hospital: h, caller: c}, function(list) {
           if (!list || list.length === 0) {
             resDiv.innerHTML = '<p class="center grey-text" style="padding:30px;">검색 결과가 없습니다.</p>';
             return;
@@ -758,7 +758,7 @@
                     '</div>';
           });
           resDiv.innerHTML = html;
-        }).getQuickHistory(h, c);
+        });
       }
 
       document.getElementById('qsHospital').addEventListener("keyup", function(event) { if (event.key === "Enter") executeQuickSearch(); });
