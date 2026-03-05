@@ -410,6 +410,16 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
     <script>
       var codeData = { products: [], mapProductToCat1: [], mapCat1ToCat2: [] };
+      var GAS_URL = "https://script.google.com/macros/s/AKfycbyXHZsEjcie59UT9T_wqRLCSBw-E7Zm0Air8EziTJbi0-XeNWKj3Mg0vwnqvGAGyzOC/exec";
+      function gasCall(action, payload, onSuccess, onFailure) {
+        fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: action, payload: payload }) })
+          .then(function(r) { return r.json(); })
+          .then(function(res) {
+            if (res.status === 'success') { if (onSuccess) onSuccess(res.data); }
+            else { if (onFailure) onFailure(new Error(res.message)); else alert("오류: " + res.message); }
+          })
+          .catch(function(e) { if (onFailure) onFailure(e); else alert("네트워크 오류: " + e.message); });
+      }
       var currentUser = "";
       var isEditMode = false;
       var recognition = null;
