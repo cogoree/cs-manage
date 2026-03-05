@@ -412,7 +412,13 @@
       var codeData = { products: [], mapProductToCat1: [], mapCat1ToCat2: [] };
       var GAS_URL = "https://script.google.com/macros/s/AKfycbyXHZsEjcie59UT9T_wqRLCSBw-E7Zm0Air8EziTJbi0-XeNWKj3Mg0vwnqvGAGyzOC/exec";
       function gasCall(action, payload, onSuccess, onFailure) {
-        fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: action, payload: payload }) })
+        // Apps Script는 POST 후 GET으로 리다이렉트하므로 redirect: 'follow' 필수
+        // Content-Type 헤더를 붙이면 preflight(OPTIONS)가 발생해서 CORS 차단됨 → 헤더 없이 전송
+        fetch(GAS_URL, {
+          method: 'POST',
+          redirect: 'follow',
+          body: JSON.stringify({ action: action, payload: payload })
+        })
           .then(function(r) { return r.json(); })
           .then(function(res) {
             if (res.status === 'success') { if (onSuccess) onSuccess(res.data); }
