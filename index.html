@@ -1,13 +1,12 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta charset="UTF-8">
+    <base target="_top">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CS Manager API Version</title>
     
     <style>
       /* --- 기본 스타일 --- */
@@ -92,7 +91,7 @@
       /* 통계 카드 스타일 */
       .stat-card { 
         background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center; border: 1px solid #eee; 
-        height: 100%; min-height: 200px; display: flex; flex-direction: column; justify-content: center; align-items: center;    
+        height: 100%; min-height: 200px; display: flex; flex-direction: column; justify-content: center; align-items: center;     
       }
       .stat-card i.material-icons { font-size: 4rem !important; color: #e0e0e0; margin-bottom: 10px; }
       .stat-value { font-size: 3rem; font-weight: 800; color: #3f51b5; margin: 0; line-height: 1.2; }
@@ -117,20 +116,24 @@
       .live-caption.active { opacity: 1; animation: blinkText 2s infinite; }
       @keyframes blinkText { 50% { opacity: 0.6; } }
 
-      /* --- 환영(이름 입력) 화면 오버레이 스타일 --- */
+      /* --- 환영(이름 입력) 화면 오버레이 스타일 추가 --- */
       #setupOverlay {
         position: fixed;       /* 화면에 고정 */
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        background-color: #f0f2f5; 
-        z-index: 9999;         
-        display: none;         
+        background-color: #f0f2f5; /* 배경색 (불투명하게 처리하여 뒤에 내용을 가림) */
+        z-index: 9999;         /* nav바 보다 훨씬 높은 순위로 설정하여 맨 위로 올림 */
+        
+        /* 내용 중앙 정렬 */
+        display: none;         /* 기본은 숨김 (JS에서 flex로 변경됨) */
         flex-direction: column;
         justify-content: center;
         align-items: center;
       }
+
+      /* 입력창 박스 디자인 (선택 사항) */
       .setup-box {
         background: white;
         padding: 40px;
@@ -141,29 +144,57 @@
         max-width: 400px;
       }
 
-      /* 모바일 전용 반응형 스타일 */
+      /* =========================================
+         📱 모바일 전용 반응형 스타일 (600px 이하)
+         ========================================= */
       @media only screen and (max-width: 600px) {
+        
+        /* 1. 상단 네비게이션 바 수정 */
         nav { height: 56px; line-height: 56px; } 
         .brand-logo { font-size: 1.2rem !important; margin-left: 10px !important; width: auto; }
         .brand-logo span { display: none !important; } 
         .user-chip { margin-right: 10px !important; padding: 0 10px !important; font-size: 0.85rem !important; height: 32px; line-height: 32px; margin-top: 12px; }
-        .container { width: 94% !important; margin: 10px auto !important; padding: 0 !important; }
+
+        /* 2. 전체 레이아웃 (좌우 여백 확보) */
+        .container { 
+            width: 94% !important; /* 💡 100%에서 94%로 줄여서 좌우 여백 확보 */
+            margin: 10px auto !important; /* 상단 여백 및 중앙 정렬 */
+            padding: 0 !important; 
+        }
         .main-card { padding: 20px 15px !important; border-radius: 0 !important; box-shadow: none !important; border: none !important; }
+
+        /* 3. 섹션 제목 */
         .section-label { display: block !important; width: 100% !important; margin-top: 20px !important; margin-bottom: 15px !important; clear: both !important; border-bottom: 2px solid #e8eaf6; padding-bottom: 5px; }
+        
+        /* 4. 패널 구분 제거 */
         .col.m5, .col.m7 { border-right: none !important; padding: 0 !important; }
+
+        /* 5. 입력폼 간격 */
         .row .col.s12 { padding: 0px 14px 0px 14px !important; margin-bottom: 6px !important; } 
         .form-group { margin-bottom: 5px !important; } 
+        
+        /* 6. 탭 메뉴 */
         .custom-tabs { height: 48px; padding: 4px 4px 0 4px; }
         .custom-tab { font-size: 0.9rem !important; padding: 0 5px !important; height: 44px; line-height: 44px; }
+        
+        /* 7. 필터 영역 */
         .filter-container { display: block !important; padding: 15px !important; }
         .filter-item { width: 100% !important; margin-bottom: 10px !important; }
         .filter-actions { display: block !important; text-align: center !important; margin-top: 15px; }
         .filter-btn { width: 100% !important; }
+        
+        /* 8. 모달 */
         .modal { width: 95% !important; max-height: 90% !important; }
+        
+        /* 9. 하단 버튼 */
         #btnTempSave, #btnSave, button[onclick="resetEntryFormConfirm()"] { height: 50px !important; line-height: 50px !important; font-size: 1.1rem !important; margin-bottom: 10px; }
         .row .col.m5 { display: block !important; } 
+        
+        /* 10. 테이블 스크롤 */
         #todoListArea, #searchResultArea { overflow-x: auto !important; -webkit-overflow-scrolling: touch; margin: 0 -15px; padding: 0 15px; }
         .log-table { min-width: 600px; } 
+
+        /* 11. 통계 */
         canvas { max-height: 250px !important; }
         .stat-card { margin-bottom: 15px; min-height: 180px; }
         .col.s12.m6 { margin-bottom: 0; }
@@ -172,7 +203,6 @@
   </head>
   <body>
 
-    <!-- 모달 등 기타 UI 구조는 이전과 동일 -->
     <div id="modal-temp-save" class="modal" style="width: 450px; border-radius: 12px;">
       <div class="modal-content center" style="padding: 40px 24px 20px 24px;">
         <i class="material-icons" style="font-size: 4rem; color: #ff9800; margin-bottom:10px;">warning</i>
@@ -226,6 +256,11 @@
           </span>
         </span>
         <ul class="right">
+          <li id="micLinkLi" style="display:none;">
+            <a id="btnBreakout" href="#" target="_blank" style="color:#fff; font-weight:bold; background:#e91e63; padding:0 15px; border-radius:15px; line-height:34px; height:34px; display:inline-block; margin-top:15px; margin-right:20px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+              🎤 마이크 오류 시 클릭(새창)
+            </a>
+          </li>
           <li><span id="displayUser" class="user-chip" onclick="resetUser()" title="사용자 변경"></span></li>
         </ul>
       </div>
@@ -374,40 +409,15 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
     <script>
-      // =========================================================================
-      // 💡 [매우 중요] 앱스 스크립트에서 배포 후 복사한 '웹 앱 URL'을 아래에 붙여넣으세요!
-      // =========================================================================
-      const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_oV6sU1Rww1KeqE9hxQ3DHK2ub4AW3vDfPiAGm9SZaWsqiuts81FO2M3N9NU4sZeO/exec"; 
-
-      // --- 통신 전담 헬퍼 함수 (CORS 완전 우회를 위한 Simple Request 방식) ---
-      async function callServer(action, payload = null) {
-        try {
-          // headers 속성을 완전히 제거하여 브라우저의 사전 검사(OPTIONS)를 회피하고
-          // 강제로 Simple Request(text/plain)로 전송하게 만듭니다.
-          const response = await fetch(SCRIPT_URL, {
-            method: 'POST',
-            body: JSON.stringify({ action: action, payload: payload })
-          });
-
-          const result = await response.json();
-          if (result.status === 'success') {
-            return result.data;
-          } else {
-            throw new Error(result.message);
-          }
-        } catch (error) {
-          console.error("API Call Error:", error);
-          throw new Error("서버 연결 실패. 배포 권한이 '모든 사용자(Anyone)'로 되어 있는지 확인해주세요.");
-        }
-      }
-
       var codeData = { products: [], mapProductToCat1: [], mapCat1ToCat2: [] };
       var currentUser = "";
       var isEditMode = false;
       var recognition = null;
       var isRecognizing = false;
       var currentTargetId = null;
-      var currentCaptionId = null; 
+      var currentCaptionId = null;
+      var accumulatedFinal = '';      // ✅ 세션 내 누적 final 버퍼
+      var restartDebounce = null;     // ✅ 재시작 딜레이용 타이머
       var previousTab = 'searchTab'; 
 
       var chartHosp = null;
@@ -424,6 +434,13 @@
         var modals = document.querySelectorAll('.modal');
         M.Modal.init(modals, { dismissible: false });
 
+        if (window.top !== window.self) {
+          // iframe 안(exec 링크)에서 실행 중이면 탈출 버튼을 보여줌
+          document.getElementById('micLinkLi').style.display = 'inline-block';
+          // 현재 iframe의 '진짜 주소'를 버튼 링크에 연결
+          document.getElementById('btnBreakout').href = document.location.href; 
+        }
+
         checkUser();
         var now = new Date(); var offset = now.getTimezoneOffset() * 60000;
         var today = new Date(now.getTime() - offset).toISOString().substring(0, 10);
@@ -433,59 +450,76 @@
         document.getElementById('searchEnd').value = today;
         document.getElementById('statStart').value = today.substring(0, 4) + "-01-01";
         document.getElementById('statEnd').value = today;
+        google.script.run.withSuccessHandler(initData).getInitialData();
         
-        // --- 통신 부분 수정 ---
-        callServer('getInitialData')
-          .then(initData)
-          .catch(err => alert("초기 데이터 로드 실패: " + err.message));
-        
-        // 음성 인식 설정
         if ('webkitSpeechRecognition' in window) {
           recognition = new webkitSpeechRecognition();
           recognition.continuous = true; 
           recognition.interimResults = true; 
-          recognition.lang = 'ko-KR'; 
+          recognition.lang = 'ko-KR';
+          recognition.maxAlternatives = 1; // ✅ 단일 최적 결과에 집중 (한국어는 1이 더 안정적)
           
           recognition.onresult = function(event) {
-            var finalTranscript = ''; var interimTranscript = '';
+            var newFinal = '';
+            var interimTranscript = '';
+
             for (var i = event.resultIndex; i < event.results.length; ++i) {
-              if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
-              else interimTranscript += event.results[i][0].transcript;
+              if (event.results[i].isFinal) {
+                // ✅ 가장 신뢰도 높은 후보 선택
+                newFinal += event.results[i][0].transcript;
+              } else {
+                interimTranscript += event.results[i][0].transcript;
+              }
             }
+
             if (currentTargetId) {
-                if (finalTranscript.trim().length > 0) {
-                    var target = document.getElementById(currentTargetId);
-                    target.value += (target.value ? ' ' : '') + finalTranscript;
-                    target.scrollTop = target.scrollHeight;
+              if (newFinal.trim().length > 0) {
+                accumulatedFinal += (accumulatedFinal ? ' ' : '') + newFinal.trim();
+                var target = document.getElementById(currentTargetId);
+                // ✅ 텍스트박스에는 이 세션의 누적 내용 전체를 반영
+                var baseValue = target.dataset.baseValue || '';
+                target.value = baseValue + (baseValue && accumulatedFinal ? ' ' : '') + accumulatedFinal;
+                target.scrollTop = target.scrollHeight;
+              }
+              if (currentCaptionId) {
+                var caption = document.getElementById(currentCaptionId);
+                if (interimTranscript.trim().length > 0) {
+                  caption.innerText = "👂 " + interimTranscript + "...";
+                  caption.classList.add('active');
+                } else {
+                  caption.innerText = "";
+                  caption.classList.remove('active');
                 }
-                if (currentCaptionId) {
-                    var caption = document.getElementById(currentCaptionId);
-                    if (interimTranscript.trim().length > 0) { caption.innerText = "👂 " + interimTranscript + "..."; caption.classList.add('active'); } 
-                    else { caption.innerText = ""; caption.classList.remove('active'); }
-                }
+              }
             }
           };
 
           recognition.onerror = function(event) { 
-            if (event.error === 'aborted') return;
-            console.warn('Speech error:', event.error);
+            if (event.error === 'aborted' || event.error === 'no-speech') return; // ✅ no-speech는 무시 (자동 재시작으로 처리)
             if (event.error === 'not-allowed') {
-              alert("마이크 권한이 차단되었습니다. 브라우저 설정에서 마이크를 허용해주세요.");
+              alert("마이크 권한이 차단되었습니다.\n\n1. 브라우저 설정에서 마이크를 허용해주세요.\n2. 앱스 스크립트 편집기 내부가 아닌, 정식 링크(새 탭)에서 실행해주세요.");
               stopVoiceUI();
             }
+            console.warn('Speech error:', event.error);
           };
 
           recognition.onend = function() { 
             if (isManualStop) {
-                stopVoiceUI(); 
+              stopVoiceUI(); 
             } else {
-                if (currentTargetId) {
+              if (currentTargetId) {
+                // ✅ 즉시 재시작 대신 150ms 딜레이 → 브라우저 내부 버퍼 안정화
+                clearTimeout(restartDebounce);
+                restartDebounce = setTimeout(function() {
+                  if (currentTargetId && !isManualStop) {
                     try { recognition.start(); } catch(e) {}
-                } else {
-                    stopVoiceUI();
-                }
+                  }
+                }, 150);
+              } else {
+                stopVoiceUI();
+              }
             }
-          }
+          };
         }
       });
       
@@ -493,9 +527,13 @@
       
       function toggleVoice(targetId, captionId, btnElement) { if (!recognition) return alert("Chrome 브라우저를 사용해주세요."); if (isRecognizing) { if (currentTargetId === targetId) stopVoice(); else { stopVoice(); setTimeout(function() { startVoice(targetId, captionId, btnElement); }, 300); } } else { startVoice(targetId, captionId, btnElement); } }
       function startVoice(targetId, captionId, btnElement) { 
-          isManualStop = false; 
+          isManualStop = false;
+          accumulatedFinal = '';    // ✅ 새 세션 시작 시 누적 버퍼 초기화
           currentTargetId = targetId; 
-          currentCaptionId = captionId; 
+          currentCaptionId = captionId;
+          // ✅ 현재 텍스트박스 기존 값 저장 (새로 인식된 내용을 덧붙이기 위함)
+          var target = document.getElementById(targetId);
+          if (target) target.dataset.baseValue = target.value;
           try { recognition.start(); } catch(e) { console.log("Already started"); }
           isRecognizing = true; 
           if(btnElement) btnElement.classList.add('listening'); 
@@ -510,54 +548,8 @@
       }
       function stopVoiceUI() { isRecognizing = false; if(currentCaptionId) { var caption = document.getElementById(currentCaptionId); if(caption) { caption.innerText = ""; caption.classList.remove('active'); } } currentTargetId = null; currentCaptionId = null; document.querySelectorAll('.mic-btn').forEach(el => el.classList.remove('listening')); if (isTimerRunning) toggleTimer(); }
 
-      function requestAiSummary() { 
-        var content = document.getElementById('inContent').value; 
-        if (!content || content.trim().length < 5) return alert("분석할 통화 내용이 부족합니다."); 
-        
-        var aiBtn = document.getElementById('btn-ai'); 
-        aiBtn.classList.add('loading'); 
-        
-        callServer('callGemini', content).then(function(result) {
-            aiBtn.classList.remove('loading'); 
-            if(result.startsWith("Error") || result.startsWith("AI 호출") || result.startsWith("❌")) { alert(result); return; } 
-            parseAndFillAiResult(result); 
-            M.toast({html: '✨ AI 분석 및 자동분류가 완료되었습니다!', classes: 'rounded'});
-        }).catch(function(e) {
-            aiBtn.classList.remove('loading'); 
-            alert("오류: " + e.message); 
-        });
-      }
-
-      function handleFileUpload(input) { 
-        var file = input.files[0]; 
-        if(!file) return; 
-        if(file.size > 20 * 1024 * 1024) { alert("파일 크기가 너무 큽니다. (20MB 이하 권장)"); input.value = ""; return; } 
-        
-        var reader = new FileReader(); 
-        var aiBtn = document.getElementById('btn-ai'); 
-        aiBtn.classList.add('loading'); 
-        M.toast({html: '📂 파일 업로드 중...'}); 
-        
-        reader.onload = function(e) { 
-          var base64Data = e.target.result.split(',')[1]; 
-          var mimeType = file.type; 
-          var audioPayload = { mimeType: mimeType, data: base64Data }; 
-          
-          callServer('callGemini', audioPayload).then(function(result) {
-            aiBtn.classList.remove('loading'); 
-            input.value = ""; 
-            if(result.startsWith("Error") || result.startsWith("AI 호출") || result.startsWith("❌")) { alert(result); return; } 
-            document.getElementById('inContent').value = "[📂 오디오 파일 분석 결과]\n파일명: " + file.name; 
-            parseAndFillAiResult(result); 
-            alert("✨ 녹음 파일 분석 완료!"); 
-          }).catch(function(e) {
-            aiBtn.classList.remove('loading'); 
-            input.value=""; 
-            alert("오류: " + e.message); 
-          });
-        }; 
-        reader.readAsDataURL(file); 
-      }
+      function requestAiSummary() { var content = document.getElementById('inContent').value; if (!content || content.trim().length < 5) return alert("분석할 통화 내용이 부족합니다."); var aiBtn = document.getElementById('btn-ai'); aiBtn.classList.add('loading'); google.script.run.withSuccessHandler(function(result) { aiBtn.classList.remove('loading'); if(result.startsWith("Error") || result.startsWith("AI 호출") || result.startsWith("❌")) { alert(result); return; } parseAndFillAiResult(result); M.toast({html: '✨ AI 분석 및 자동분류가 완료되었습니다!', classes: 'rounded'}); }).withFailureHandler(function(e){ aiBtn.classList.remove('loading'); alert("오류: "+e.message); }).callGemini(content); }
+      function handleFileUpload(input) { var file = input.files[0]; if(!file) return; if(file.size > 20 * 1024 * 1024) { alert("파일 크기가 너무 큽니다. (20MB 이하 권장)"); input.value = ""; return; } var reader = new FileReader(); var aiBtn = document.getElementById('btn-ai'); aiBtn.classList.add('loading'); M.toast({html: '📂 파일 업로드 중...'}); reader.onload = function(e) { var base64Data = e.target.result.split(',')[1]; var mimeType = file.type; var audioPayload = { mimeType: mimeType, data: base64Data }; google.script.run.withSuccessHandler(function(result) { aiBtn.classList.remove('loading'); input.value = ""; if(result.startsWith("Error") || result.startsWith("AI 호출") || result.startsWith("❌")) { alert(result); return; } document.getElementById('inContent').value = "[📂 오디오 파일 분석 결과]\n파일명: " + file.name; parseAndFillAiResult(result); alert("✨ 녹음 파일 분석 완료!"); }).withFailureHandler(function(e){ aiBtn.classList.remove('loading'); input.value=""; alert("오류: "+e.message); }).callGemini(audioPayload); }; reader.readAsDataURL(file); }
       
       function fuzzySelect(selectId, targetText) { if (!targetText || targetText.trim() === "" || targetText.includes("알수없음")) return false; var sel = document.getElementById(selectId); if (!sel) return false; var t = targetText.toLowerCase().replace(/\s/g, ''); for (var i = 0; i < sel.options.length; i++) { var optVal = sel.options[i].value.toLowerCase().replace(/\s/g, ''); if (optVal && (optVal.includes(t) || t.includes(optVal))) { sel.selectedIndex = i; return true; } } return false; }
       function cleanText(str) { return str ? str.replace(/\*\*/g, '').trim() : ""; }
@@ -580,22 +572,16 @@
         var row = JSON.parse(decodeURIComponent(rowStr)); var hosp = row.hospital || "고객"; var caller = row.caller || "담당자"; var q = row.content || ""; var a = row.answer || ""; var prod = row.product || "";
         var originalText = btnElement.innerText; btnElement.innerText = "생성 중..."; btnElement.disabled = true; 
         M.toast({html: '🤖 AI가 고객 맞춤형 안내 가이드를 작성 중입니다...'});
-        
-        callServer('generateFaqByAI', {question: q, answer: a, product: prod, hospital: hosp, caller: caller})
-          .then(function(aiResult) {
+        google.script.run.withSuccessHandler(function(aiResult) {
             btnElement.innerText = originalText; btnElement.disabled = false;
             if(aiResult.startsWith("❌ AI 응답 실패") || aiResult.startsWith("Conn Error") || aiResult.startsWith("Error")) { alert(aiResult); return; }
             navigator.clipboard.writeText(aiResult).then(function() { M.toast({html: '📋 AI 안내 가이드가 복사되었습니다!', classes: 'rounded green'}); });
-          })
-          .catch(function(err) {
-            btnElement.innerText = originalText; btnElement.disabled = false; alert("오류: " + err.message); 
-          });
+        }).withFailureHandler(function(err){ btnElement.innerText = originalText; btnElement.disabled = false; alert("오류: " + err.message); }).generateFaqByAI(q, a, prod, hosp, caller);
       }
 
       function loadTodoList() { 
         var div = document.getElementById('todoListArea'); document.getElementById('todoLoader').style.display = 'block'; 
-        
-        callServer('getMyTodoList', currentUser).then(function(data){ 
+        google.script.run.withSuccessHandler(function(data){ 
           document.getElementById('todoLoader').style.display = 'none'; 
           if(!data || data.length===0) { div.innerHTML='<div class="center" style="padding:50px;"><i class="material-icons large grey-text text-lighten-2">task_alt</i><br><h5 class="grey-text">할 일이 없습니다. 완벽해요!</h5></div>'; return; } 
           var html = '<table class="log-table"><thead><tr><th style="width:80px; text-align:center;">경과</th><th>병원/날짜</th><th>내용 (질문/답변)</th><th style="width: 140px; min-width:140px;">발신자/번호</th><th style="width: 80px; text-align: center;">상태</th></tr></thead><tbody>'; 
@@ -606,17 +592,13 @@
             var stClass = r.status.includes('임시') ? 'status-temp' : 'status-ing'; 
             html += `<tr onclick="loadToEdit('${rowStr}', 'todoTab')"><td class="center"><span class="d-day-badge" style="${dDayStyle}">${r.dTag}</span></td><td><b>${r.hospital}</b><br><small class="grey-text">${r.date}</small></td><td><div style="font-weight:500; margin-bottom:4px;">Q. ${r.content}</div><div style="color:#558b2f; font-size:0.85rem;">A. ${r.answer || '(답변 없음)'}</div><small class="grey-text">${r.product} / ${r.type}</small></td><td><span style="font-weight:bold;">${r.caller}</span><br><small class="grey-text">${r.callback || '-'}</small></td><td style="text-align:center;"><span class="status-badge ${stClass}">${r.status}</span></td></tr>`; 
           }); html += '</tbody></table>'; div.innerHTML = html; 
-        }).catch(err => {
-            document.getElementById('todoLoader').style.display = 'none';
-            alert("조회 실패: " + err.message);
-        }); 
+        }).getMyTodoList(currentUser); 
       }
       
       function searchLogs() { 
         var s = document.getElementById('searchStart').value; var e = document.getElementById('searchEnd').value; var ing = document.getElementById('searchOnlyIng').checked; var hosp = document.getElementById('searchHospital').value; var caller = document.getElementById('searchCaller').value; var recv = document.getElementById('searchReceiver').value; 
         var div = document.getElementById('searchResultArea'); div.innerHTML='<div class="progress"><div class="indeterminate"></div></div>'; 
-        
-        callServer('searchCsLogs', { startDate: s, endDate: e, onlyIng: ing, hospital: hosp, caller: caller, receiver: recv }).then(function(data){ 
+        google.script.run.withSuccessHandler(function(data){ 
           if(!data || data.length===0) { div.innerHTML='<p class="center grey-text">결과 없음</p>'; return; } 
           var html = '<table class="log-table"><thead><tr><th>병원/날짜</th><th>내용/답변</th><th style="width: 140px; min-width:140px;">발신자/번호</th><th style="width: 80px; text-align: center;">상태</th><th style="width: 100px; text-align: center;">동작</th></tr></thead><tbody>'; 
           data.forEach(r => { 
@@ -628,9 +610,7 @@
             var dispCallback = safeCallback.trim() !== "" ? r.callback : "-";
             html += `<tr onclick="loadToEdit('${rowStr}', 'searchTab')"><td><b>${r.hospital}</b><br><small class="grey-text">${r.date}</small></td><td><div style="font-weight:500; margin-bottom:4px;">Q. ${r.content}</div><div style="color:#558b2f; font-size:0.9rem">A. ${r.answer||''}</div><small class="grey-text">${r.product} (${r.receiver})</small></td><td><span style="font-weight:600">${dispCaller}</span><br><small class="grey-text">${dispCallback}</small></td><td style="text-align:center;"><span class="status-badge ${stClass}">${r.status}</span></td><td style="text-align:center;"><button class="btn-faq" onclick="generateFaq(event, '${rowStr}', this)">FAQ 생성</button></td></tr>`; 
           }); html += '</tbody></table>'; div.innerHTML = html; 
-        }).catch(err => {
-            div.innerHTML='<p class="center red-text">오류: ' + err.message + '</p>';
-        });
+        }).searchCsLogs(s, e, ing, hosp, caller, recv);
       }
       
       function loadToEdit(rowStr, sourceTab) { 
@@ -646,49 +626,27 @@
       
       function goBackToList() { cancelEditMode(); var tabs = document.querySelectorAll('.custom-tab'); if (previousTab === 'todoTab') { switchTab('todoTab', tabs[1], false, true); } else { switchTab('searchTab', tabs[2]); searchLogs(); } } 
       function cancelEditMode() { isEditMode = false; document.getElementById('editModeBar').style.display = 'none'; var btn = document.getElementById('btnSave'); btn.innerText = 'DB에 저장하기'; btn.classList.remove('btn-update'); document.getElementById('editIndex').value = ''; resetEntryForm(); }
-      
-      function deleteData() { 
-        var index = document.getElementById('editIndex').value; 
-        if(!index) return; 
-        if(!confirm('정말 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.')) return; 
-        
-        var btn = document.getElementById('btnSave'); btn.disabled = true; btn.innerText = "삭제 중..."; 
-        
-        callServer('deleteCsLog', index).then(function(res){ 
-          btn.disabled = false; btn.innerText = "DB에 저장하기"; 
-          if(res === "DELETED") { alert("🗑️ 삭제되었습니다."); goBackToList(); } else { alert("오류: " + res); } 
-        }).catch(err => {
-          btn.disabled = false; btn.innerText = "DB에 저장하기"; alert("오류: " + err.message);
-        }); 
-      }
-      
-      function loadStats() { 
-        var start = document.getElementById('statStart').value; var end = document.getElementById('statEnd').value; var hosp = document.getElementById('statHospital').value; var caller = document.getElementById('statCaller').value; var recv = document.getElementById('statReceiver').value; 
-        document.getElementById('statLoader').style.display = 'block'; 
-        
-        callServer('getDashboardStats', { startDate: start, endDate: end, hospital: hosp, caller: caller, receiver: recv }).then(function(stats){ 
-          document.getElementById('statLoader').style.display = 'none'; 
-          document.getElementById('statTotalCount').innerText = stats.total.toLocaleString() + "건"; 
-          document.getElementById('statProcessRate').innerText = stats.rate + "%"; 
-          renderChart('chartHospital', 'bar', { labels: stats.topHospitals.map(x => x.label), datasets: [{ label: '문의 건수', data: stats.topHospitals.map(x => x.data), backgroundColor: 'rgba(63, 81, 181, 0.7)', borderColor: 'rgba(63, 81, 181, 1)', borderWidth: 1 }] }, { indexAxis: 'y' }); 
-          renderChart('chartCallerGraph', 'bar', { labels: stats.topCallers.map(x => x.label), datasets: [{ label: '문의 건수', data: stats.topCallers.map(x => x.data), backgroundColor: 'rgba(0, 150, 136, 0.7)', borderColor: 'rgba(0, 150, 136, 1)', borderWidth: 1 }] }, { indexAxis: 'y' }); 
-          renderChart('chartCategory', 'doughnut', { labels: stats.topCategories.map(x => x.label), datasets: [{ data: stats.topCategories.map(x => x.data), backgroundColor: ['#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3'] }] }); 
-          renderChart('chartTrend', 'line', { labels: stats.monthlyTrend.map(x => x.label), datasets: [{ label: '월별 발생 건수', data: stats.monthlyTrend.map(x => x.data), borderColor: '#ff9800', backgroundColor: 'rgba(255, 152, 0, 0.1)', fill: true, tension: 0.3 }] }); 
-        }).catch(err => {
-            document.getElementById('statLoader').style.display = 'none'; alert("오류: " + err.message);
-        }); 
-      }
-      
+      function deleteData() { var index = document.getElementById('editIndex').value; if(!index) return; if(!confirm('정말 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.')) return; var btn = document.getElementById('btnSave'); btn.disabled = true; btn.innerText = "삭제 중..."; google.script.run.withSuccessHandler(function(res){ btn.disabled = false; btn.innerText = "DB에 저장하기"; if(res === "DELETED") { alert("🗑️ 삭제되었습니다."); goBackToList(); } else { alert("오류: " + res); } }).deleteCsLog(index); }
+      function loadStats() { var start = document.getElementById('statStart').value; var end = document.getElementById('statEnd').value; var hosp = document.getElementById('statHospital').value; var caller = document.getElementById('statCaller').value; var recv = document.getElementById('statReceiver').value; document.getElementById('statLoader').style.display = 'block'; google.script.run.withSuccessHandler(function(stats){ document.getElementById('statLoader').style.display = 'none'; document.getElementById('statTotalCount').innerText = stats.total.toLocaleString() + "건"; document.getElementById('statProcessRate').innerText = stats.rate + "%"; renderChart('chartHospital', 'bar', { labels: stats.topHospitals.map(x => x.label), datasets: [{ label: '문의 건수', data: stats.topHospitals.map(x => x.data), backgroundColor: 'rgba(63, 81, 181, 0.7)', borderColor: 'rgba(63, 81, 181, 1)', borderWidth: 1 }] }, { indexAxis: 'y' }); renderChart('chartCallerGraph', 'bar', { labels: stats.topCallers.map(x => x.label), datasets: [{ label: '문의 건수', data: stats.topCallers.map(x => x.data), backgroundColor: 'rgba(0, 150, 136, 0.7)', borderColor: 'rgba(0, 150, 136, 1)', borderWidth: 1 }] }, { indexAxis: 'y' }); renderChart('chartCategory', 'doughnut', { labels: stats.topCategories.map(x => x.label), datasets: [{ data: stats.topCategories.map(x => x.data), backgroundColor: ['#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3'] }] }); renderChart('chartTrend', 'line', { labels: stats.monthlyTrend.map(x => x.label), datasets: [{ label: '월별 발생 건수', data: stats.monthlyTrend.map(x => x.data), borderColor: '#ff9800', backgroundColor: 'rgba(255, 152, 0, 0.1)', fill: true, tension: 0.3 }] }); }).getDashboardStats(start, end, hosp, caller, recv); }
       function renderChart(canvasId, type, data, extraOptions) { var ctx = document.getElementById(canvasId).getContext('2d'); if (canvasId === 'chartHospital' && chartHosp) chartHosp.destroy(); if (canvasId === 'chartCategory' && chartCat) chartCat.destroy(); if (canvasId === 'chartTrend' && chartTrend) chartTrend.destroy(); if (canvasId === 'chartCallerGraph' && chartCallerObj) chartCallerObj.destroy(); var config = { type: type, data: data, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: type !== 'bar', position: 'bottom' } }, ...extraOptions } }; var newChart = new Chart(ctx, config); if (canvasId === 'chartHospital') chartHosp = newChart; if (canvasId === 'chartCategory') chartCat = newChart; if (canvasId === 'chartTrend') chartTrend = newChart; if (canvasId === 'chartCallerGraph') chartCallerObj = newChart; }
       function checkUser() { var saved = localStorage.getItem("csUser"); if(saved) { currentUser = saved; document.getElementById('displayUser').innerText = saved + "님"; document.getElementById('setupOverlay').style.display = 'none'; } else document.getElementById('setupOverlay').style.display = 'flex'; }
       function saveUser() { var name = document.getElementById('setupName').value.trim(); if(!name) return alert('이름을 입력하세요'); localStorage.setItem("csUser", name); currentUser = name; document.getElementById('displayUser').innerText = name + "님"; document.getElementById('setupOverlay').style.display = 'none'; }
       function resetUser() { 
         if(confirm('사용자를 변경하시겠습니까?\n(현재 작성 중인 내용은 초기화됩니다.)')) { 
+            // 1. 저장된 사용자 정보 삭제
             localStorage.removeItem("csUser"); 
             currentUser = ""; 
+
+            // 2. 상단 사용자 이름 지우기
             document.getElementById('displayUser').innerText = "";
+            
+            // 3. 로그인 입력창 비우기
             document.getElementById('setupName').value = "";
+
+            // 4. 작성 중이던 내용 초기화 (오류 방지)
             resetEntryForm();
+
+            // 5. 로그인(이름 입력) 화면 즉시 띄우기 (새로고침 X)
             document.getElementById('setupOverlay').style.display = 'flex';
         } 
       } 
@@ -737,26 +695,23 @@
         var btn = document.getElementById('btnSave'); var orgTxt = btn.innerText; btn.disabled=true; btn.innerText='처리 중...'; 
         var btnT = document.getElementById('btnTempSave'); if(btnT) btnT.disabled=true;
         
-        var actionName = isEditMode ? 'updateCsLog' : 'saveCsLog';
-        callServer(actionName, form).then(function(res) {
-            btn.disabled=false; btn.innerText=orgTxt; 
-            if(btnT) btnT.disabled=false;
+        var runner = isEditMode ? google.script.run.withSuccessHandler(afterSave).updateCsLog(form) : google.script.run.withSuccessHandler(afterSave).saveCsLog(form); 
+        
+        function afterSave(res) { 
+          btn.disabled=false; btn.innerText=orgTxt; 
+          if(btnT) btnT.disabled=false;
+          
+          if(res==='SUCCESS' || res==='UPDATED') { 
+            M.toast({html: (finalStatus==='임시' ? '💾 임시저장 되었습니다' : '✅ 저장 완료')}); 
             
-            if(res==='SUCCESS' || res==='UPDATED') { 
-              M.toast({html: (finalStatus==='임시' ? '💾 임시저장 되었습니다' : '✅ 저장 완료')}); 
-              
-              if (isFromAltR) {
-                closeTempModal();
-                discardAndStartNew(); 
-              } else {
-                if(isEditMode) goBackToList(); else resetEntryForm(); 
-              }
-            } else { alert('오류: '+res); } 
-        }).catch(err => {
-            btn.disabled=false; btn.innerText=orgTxt; 
-            if(btnT) btnT.disabled=false;
-            alert("통신 오류: " + err.message);
-        });
+            if (isFromAltR) {
+              closeTempModal();
+              discardAndStartNew(); 
+            } else {
+              if(isEditMode) goBackToList(); else resetEntryForm(); 
+            }
+          } else { alert('오류: '+res); } 
+        } 
       }
       
       function resetEntryForm() { 
@@ -783,7 +738,7 @@
         var resDiv = document.getElementById('quickSearchResult');
         resDiv.innerHTML = '<div class="progress"><div class="indeterminate"></div></div>';
         
-        callServer('getQuickHistory', { hospital: h, caller: c }).then(function(list) {
+        google.script.run.withSuccessHandler(function(list) {
           if (!list || list.length === 0) {
             resDiv.innerHTML = '<p class="center grey-text" style="padding:30px;">검색 결과가 없습니다.</p>';
             return;
@@ -803,9 +758,7 @@
                     '</div>';
           });
           resDiv.innerHTML = html;
-        }).catch(err => {
-            resDiv.innerHTML = '<p class="center red-text">오류: ' + err.message + '</p>';
-        });
+        }).getQuickHistory(h, c);
       }
 
       document.getElementById('qsHospital').addEventListener("keyup", function(event) { if (event.key === "Enter") executeQuickSearch(); });
