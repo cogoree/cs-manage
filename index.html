@@ -443,6 +443,7 @@
       var currentTargetId = null;
       var currentCaptionId = null;
       var accumulatedFinal = '';      // ✅ 세션 내 누적 final 버퍼
+      var lastInterim = '';           // ✅ 세션 끊기기 직전 interim 보존 (누락 방지)
       var restartDebounce = null;     // ✅ 재시작 딜레이용 타이머
       var previousTab = 'searchTab'; 
 
@@ -500,12 +501,15 @@
 
             if (currentTargetId) {
               if (newFinal.trim().length > 0) {
+                lastInterim = '';  // ✅ 확정 결과가 오면 임시 버퍼 초기화
                 accumulatedFinal += (accumulatedFinal ? ' ' : '') + newFinal.trim();
                 var target = document.getElementById(currentTargetId);
                 // ✅ 텍스트박스에는 이 세션의 누적 내용 전체를 반영
                 var baseValue = target.dataset.baseValue || '';
                 target.value = baseValue + (baseValue && accumulatedFinal ? ' ' : '') + accumulatedFinal;
                 target.scrollTop = target.scrollHeight;
+              } else {
+                lastInterim = interimTranscript;  // ✅ 미확정 내용 보존 (세션 끊김 시 복구용)
               }
               if (currentCaptionId) {
                 var caption = document.getElementById(currentCaptionId);
@@ -521,7 +525,8 @@
           };
 
           recognition.onerror = function(event) { 
-            if (event.error === 'aborted' || event.error === 'no-speech') return; // ✅ no-speech는 무시 (자동 재시작으로 처리)
+            if (event.error === 'no-speech') return; // ✅ no-speech는 무시 (자동 재시작으로 처리)
+            if (event.error === 'aborted') return;   // ✅ aborted도 무시 (onend에서 재시작 처리)
             if (event.error === 'not-allowed') {
               alert("마이크 권한이 차단되었습니다.\n\n1. 브라우저 설정에서 마이크를 허용해주세요.\n2. 앱스 스크립트 편집기 내부가 아닌, 정식 링크(새 탭)에서 실행해주세요.");
               stopVoiceUI();
@@ -534,13 +539,22 @@
               stopVoiceUI(); 
             } else {
               if (currentTargetId) {
-                // ✅ 즉시 재시작 대신 150ms 딜레이 → 브라우저 내부 버퍼 안정화
+                // ✅ 세션 끊기기 직전 interim 내용이 있으면 누적에 추가 (이어 말하기 누락 방지)
+                if (lastInterim.trim().length > 2) {
+                  accumulatedFinal += (accumulatedFinal ? ' ' : '') + lastInterim.trim();
+                  lastInterim = '';
+                  var target = document.getElementById(currentTargetId);
+                  var baseValue = target.dataset.baseValue || '';
+                  target.value = baseValue + (baseValue && accumulatedFinal ? ' ' : '') + accumulatedFinal;
+                  target.scrollTop = target.scrollHeight;
+                }
+                // ✅ 150ms → 300ms 딜레이: 브라우저 내부 버퍼 안정화 + 전화기 마이크 끊김 대응
                 clearTimeout(restartDebounce);
                 restartDebounce = setTimeout(function() {
                   if (currentTargetId && !isManualStop) {
                     try { recognition.start(); } catch(e) {}
                   }
-                }, 150);
+                }, 300);
               } else {
                 stopVoiceUI();
               }
@@ -555,6 +569,7 @@
       function startVoice(targetId, captionId, btnElement) { 
           isManualStop = false;
           accumulatedFinal = '';    // ✅ 새 세션 시작 시 누적 버퍼 초기화
+          lastInterim = '';         // ✅ interim 버퍼도 초기화
           currentTargetId = targetId; 
           currentCaptionId = captionId;
           // ✅ 현재 텍스트박스 기존 값 저장 (새로 인식된 내용을 덧붙이기 위함)
