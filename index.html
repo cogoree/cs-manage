@@ -445,7 +445,7 @@
           document.body.removeChild(script);
           var err = new Error('요청 시간 초과');
           if (onFailure) onFailure(err); else alert("오류: " + err.message);
-        }, 30000);
+        }, 55000); // ✅ AI 응답 대기 시간 30초 → 55초 (Gemini 처리 시간 고려)
 
         window[cbName] = function(res) {
           clearTimeout(timer);
@@ -798,7 +798,11 @@
       function resetEntryForm() { 
         document.getElementById('inHospital').value=''; document.getElementById('inCaller').value=''; document.getElementById('inCallback').value=''; 
         document.getElementById('inDuration').value=''; 
-        document.getElementById('inContent').value=''; document.getElementById('inSummary').value=''; document.getElementById('inQuestion').value=''; document.getElementById('inAnswer').value=''; 
+        document.getElementById('inContent').value=''; document.getElementById('inSummary').value=''; document.getElementById('inQuestion').value=''; document.getElementById('inAnswer').value='';
+        // ✅ AI 분석으로 늘어난 textarea 높이 초기화 (style.height 리셋 후 autoResize 재적용)
+        ['inSummary','inQuestion','inAnswer','inContent'].forEach(function(id){
+          var el = document.getElementById(id); if(el){ el.style.height=''; M.textareaAutoResize(el); }
+        }); 
         document.getElementById('chkComplete').checked=false; 
         var now = new Date(); var offset = now.getTimezoneOffset() * 60000; var today = new Date(now.getTime() - offset).toISOString().substring(0, 10); 
         document.getElementById('inDate').value = today; document.getElementById('inDept').value = ""; document.getElementById('inProduct').value = ""; document.getElementById('inType').value = ""; 
