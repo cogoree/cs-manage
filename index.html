@@ -620,10 +620,32 @@
       function fuzzySelect(selectId, targetText) { if (!targetText || targetText.trim() === "" || targetText.includes("알수없음")) return false; var sel = document.getElementById(selectId); if (!sel) return false; var t = targetText.toLowerCase().replace(/\s/g, ''); for (var i = 0; i < sel.options.length; i++) { var optVal = sel.options[i].value.toLowerCase().replace(/\s/g, ''); if (optVal && (optVal.includes(t) || t.includes(optVal))) { sel.selectedIndex = i; return true; } } return false; }
       function cleanText(str) { return str ? str.replace(/\*\*/g, '').trim() : ""; }
       
-      function parseAndFillAiResult(text) { 
-        var summaryMatch = text.match(/\[요약\]\s*([\s\S]*?)(?=\n\[|$)/); var questionMatch = text.match(/\[질문\]\s*([\s\S]*?)(?=\n\[|$)/); var answerMatch = text.match(/\[답변\]\s*([\s\S]*?)(?=\n\[|$)/); var deptMatch = text.match(/분과:\s*(.*)/); var prodMatch = text.match(/제품:\s*(.*)/); var typeMatch = text.match(/구분:\s*(.*)/); var cat1Match = text.match(/분류1:\s*(.*)/); var cat2Match = text.match(/분류2:\s*(.*)/);
-        if(summaryMatch) document.getElementById('inSummary').value = cleanText(summaryMatch[1]); if(questionMatch) document.getElementById('inQuestion').value = cleanText(questionMatch[1]); if(answerMatch) document.getElementById('inAnswer').value = cleanText(answerMatch[1]); 
-        M.textareaAutoResize(document.getElementById('inSummary')); M.textareaAutoResize(document.getElementById('inQuestion')); M.textareaAutoResize(document.getElementById('inAnswer')); 
+      function parseAndFillAiResult(text) {
+        // ✅ 정규식 개선: \n\n[ 처럼 빈줄이 있어도 정확히 섹션 구분되도록 수정
+        var summaryMatch  = text.match(/\[요약\]\s*([\s\S]*?)\s*(?=\n*\[|$)/);
+        var questionMatch = text.match(/\[질문\]\s*([\s\S]*?)\s*(?=\n*\[|$)/);
+        var answerMatch   = text.match(/\[답변\]\s*([\s\S]*?)\s*(?=\n*\[분류\]|$)/);
+        var deptMatch  = text.match(/분과:\s*(.*)/);
+        var prodMatch  = text.match(/제품:\s*(.*)/);
+        var typeMatch  = text.match(/구분:\s*(.*)/);
+        var cat1Match  = text.match(/분류1:\s*(.*)/);
+        var cat2Match  = text.match(/분류2:\s*(.*)/);
+
+        // ✅ 각 필드 값 적용 전 항상 초기화 (이전 분석 내용이 남아있는 경우 방지)
+        var summaryEl  = document.getElementById('inSummary');
+        var questionEl = document.getElementById('inQuestion');
+        var answerEl   = document.getElementById('inAnswer');
+
+        summaryEl.value  = summaryMatch  ? cleanText(summaryMatch[1])  : '';
+        questionEl.value = questionMatch ? cleanText(questionMatch[1]) : '';
+        answerEl.value   = answerMatch   ? cleanText(answerMatch[1])   : '';
+
+        // ✅ 값 변경 후 높이 재조정
+        [summaryEl, questionEl, answerEl].forEach(function(el) {
+          el.style.height = '';
+          M.textareaAutoResize(el);
+        });
+
         if(deptMatch) fuzzySelect('inDept', cleanText(deptMatch[1]));
         if(prodMatch) { if(fuzzySelect('inProduct', cleanText(prodMatch[1]))) { updateCat1(); if(cat1Match && fuzzySelect('inCat1', cleanText(cat1Match[1]))) { updateCat2(); if(cat2Match) fuzzySelect('inCat2', cleanText(cat2Match[1])); } } }
         if(typeMatch) fuzzySelect('inType', cleanText(typeMatch[1]));
