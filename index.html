@@ -734,8 +734,7 @@
         }; 
         
         var btn = document.getElementById('btnSave'); var orgTxt = btn.innerText; btn.disabled=true; btn.innerText='처리 중...'; 
-        gasCall(isEditMode ? "updateCsLog" : "saveCsLog", form, afterSave);
-        
+        var btnT = document.getElementById('btnTempSave'); if(btnT) btnT.disabled=true;
         gasCall(isEditMode ? "updateCsLog" : "saveCsLog", form, afterSave);
         
         function afterSave(res) { 
