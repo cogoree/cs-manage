@@ -733,12 +733,19 @@
           rawContent: rawContentText 
         }; 
         
-        var btn = document.getElementById('btnSave'); var orgTxt = btn.innerText; btn.disabled=true; btn.innerText='처리 중...'; 
+        var btn = document.getElementById('btnSave');
+        // ✅ 아이콘(<i>) 제외한 텍스트 노드만 변경 (innerText 복원 시 아이콘+줄바꿈 섞여 깨지는 문제 방지)
+        var btnTextNode = Array.from(btn.childNodes).find(function(n){ return n.nodeType === Node.TEXT_NODE && n.textContent.trim(); });
+        var orgTxt = btnTextNode ? btnTextNode.textContent : 'DB에 저장하기';
+        if(btnTextNode) btnTextNode.textContent = ' 처리 중...';
+        btn.disabled=true;
         var btnT = document.getElementById('btnTempSave'); if(btnT) btnT.disabled=true;
         gasCall(isEditMode ? "updateCsLog" : "saveCsLog", form, afterSave);
         
         function afterSave(res) { 
-          btn.disabled=false; btn.innerText=orgTxt; 
+          btn.disabled=false;
+          var tNode = Array.from(btn.childNodes).find(function(n){ return n.nodeType === Node.TEXT_NODE && n.textContent.trim(); });
+          if(tNode) tNode.textContent = orgTxt;
           if(btnT) btnT.disabled=false;
           
           if(res==='SUCCESS' || res==='UPDATED') { 
