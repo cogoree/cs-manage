@@ -199,9 +199,34 @@
         .stat-card { margin-bottom: 15px; min-height: 180px; }
         .col.s12.m6 { margin-bottom: 0; }
       }
+
+      /* --- 페이지 초기 로딩 오버레이 --- */
+      #pageLoadOverlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: #f0f2f5; z-index: 99999;
+        display: flex; flex-direction: column; justify-content: center; align-items: center;
+        transition: opacity 0.4s ease;
+      }
+      #pageLoadOverlay.hiding { opacity: 0; pointer-events: none; }
+      .page-loader-box { text-align: center; }
+      .page-loader-spinner {
+        width: 56px; height: 56px; border-radius: 50%;
+        border: 5px solid #e8eaf6; border-top-color: #3f51b5;
+        animation: spin 0.9s linear infinite; margin: 0 auto 20px;
+      }
+      .page-loader-text { color: #3f51b5; font-size: 1.1rem; font-weight: 700; letter-spacing: -0.3px; }
+      .page-loader-sub  { color: #9e9e9e; font-size: 0.9rem; margin-top: 6px; }
     </style>
   </head>
   <body>
+
+    <div id="pageLoadOverlay">
+      <div class="page-loader-box">
+        <div class="page-loader-spinner"></div>
+        <div class="page-loader-text">CS Manager</div>
+        <div class="page-loader-sub">데이터를 불러오는 중입니다...</div>
+      </div>
+    </div>
 
     <div id="modal-temp-save" class="modal" style="width: 450px; border-radius: 12px;">
       <div class="modal-content center" style="padding: 40px 24px 20px 24px;">
@@ -691,7 +716,16 @@
             document.getElementById('setupOverlay').style.display = 'flex';
         } 
       } 
-      function initData(data) { if(!data || data.error) return alert(data.error); codeData = data; var dataList = document.getElementById('hospital-list'); if (dataList && data.hospitals) { dataList.innerHTML = ''; data.hospitals.forEach(function(h) { var o = document.createElement('option'); o.value = h; dataList.appendChild(o); }); } fillSelect('inDept', [...new Set(data.depts)]); fillSelect('inProduct', [...new Set(data.products)]); fillSelect('inType', [...new Set(data.types)]); }
+      function initData(data) {
+        // ✅ 로딩 오버레이 제거
+        var overlay = document.getElementById('pageLoadOverlay');
+        if (overlay) { overlay.classList.add('hiding'); setTimeout(function(){ overlay.style.display='none'; }, 420); }
+        if(!data || data.error) return alert(data.error);
+        codeData = data;
+        var dataList = document.getElementById('hospital-list');
+        if (dataList && data.hospitals) { dataList.innerHTML = ''; data.hospitals.forEach(function(h) { var o = document.createElement('option'); o.value = h; dataList.appendChild(o); }); }
+        fillSelect('inDept', [...new Set(data.depts)]); fillSelect('inProduct', [...new Set(data.products)]); fillSelect('inType', [...new Set(data.types)]);
+      }
       function fillSelect(id, list, selVal) { var sel = document.getElementById(id); if(!sel) return; sel.innerHTML = '<option value="" disabled selected>선택</option>'; list.forEach(v => { var o = document.createElement('option'); o.value=v; o.text=v; if(selVal && v==selVal) o.selected=true; sel.appendChild(o); }); }
       function updateCat1(selVal) { var prod = document.getElementById('inProduct').value; var c1 = document.getElementById('inCat1'); var c2 = document.getElementById('inCat2'); if(!c1 || !c2) return; c1.innerHTML='<option value="" disabled selected>선택</option>'; c1.disabled=true; c2.innerHTML='<option value="" disabled selected>선택</option>'; c2.disabled=true; var filtered = codeData.mapProductToCat1.filter(x => x.key===prod); var list = [...new Set(filtered.map(x=>x.val))]; if(list.length>0) list.forEach(v=>{ var o=document.createElement('option'); o.value=v; o.text=v; if(selVal && v==selVal) o.selected=true; c1.appendChild(o); }); c1.disabled=false; }
       function updateCat2(selVal) { var c1Val = document.getElementById('inCat1').value; var c2 = document.getElementById('inCat2'); if(!c2) return; c2.innerHTML='<option value="" disabled selected>선택</option>'; c2.disabled=true; var filtered = codeData.mapCat1ToCat2.filter(x => x.key===c1Val); var list = [...new Set(filtered.map(x=>x.val))]; if(list.length>0) list.forEach(v=>{ var o=document.createElement('option'); o.value=v; o.text=v; if(selVal && v==selVal) o.selected=true; c2.appendChild(o); }); c2.disabled=false; }
