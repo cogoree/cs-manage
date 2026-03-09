@@ -218,7 +218,7 @@
       .page-loader-sub  { color: #9e9e9e; font-size: 0.9rem; margin-top: 6px; }
 
       /* --- 개발 진행 현황 배지 --- */
-      .dev-badge { padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; display: inline-block; min-width: 80px; text-align:center; }
+      .dev-badge { padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; display: inline-block; min-width: 70px; text-align:center; }
       .dev-논의필요 { background: #fff8e1; color: #f57f17; border: 1px solid #ffe082; }
       .dev-진행확정 { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
       .dev-진행불가 { background: #fce4ec; color: #c62828; border: 1px solid #f48fb1; }
@@ -232,6 +232,24 @@
       .dev-stat-box .dsb-val { font-size: 2.2rem; font-weight: 800; line-height: 1.1; }
       .dev-stat-box .dsb-label { font-size: 0.95rem; color: #757575; margin-top: 4px; }
       .dev-stat-box:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.12); transform: translateY(-2px); transition: 0.15s; }
+      /* 개발현황 인라인 수정 팝업 */
+      .dev-inline-select-wrap { position: relative; display: inline-block; }
+      .dev-inline-menu {
+        position: absolute; top: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+        background: white; border-radius: 10px; box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        border: 1px solid #e0e0e0; z-index: 9999; min-width: 140px; padding: 6px 0;
+        animation: fadeIn 0.15s;
+      }
+      .dev-inline-menu button {
+        display: block; width: 100%; text-align: left; background: none; border: none;
+        padding: 9px 16px; font-size: 0.9rem; font-weight: 600; cursor: pointer; color: #424242;
+      }
+      .dev-inline-menu button:hover { background: #f5f5f5; }
+      .dev-inline-menu button.active-opt { background: #e8eaf6; color: #3f51b5; }
+      .dev-inline-menu .menu-divider { border-top: 1px solid #eee; margin: 4px 0; }
+      .dev-badge.clickable { cursor: pointer; }
+      .dev-badge.clickable:hover { opacity: 0.8; transform: scale(1.05); transition: 0.15s; }
+      .dev-saving { opacity: 0.5; pointer-events: none; }
     </style>
   </head>
   <body>
@@ -869,25 +887,122 @@
           '<th>병원 / 날짜</th>' +
           '<th>제품 / 분류</th>' +
           '<th>질문 / 답변</th>' +
-          '<th style="width:90px; text-align:center;">개발현황</th>' +
+          '<th style="width:110px; text-align:center;">개발현황<br><small style=\"font-weight:400; color:#aaa;\">클릭하여 변경</small></th>' +
           '</tr></thead><tbody>';
 
         filtered.forEach(function(r) {
           var devCls   = 'dev-' + (r.devStatus || 'none');
           var devLabel = r.devStatus || '-';
-          var stClass  = r.status.includes('완료') ? 'status-done' : (r.status.includes('임시') ? 'status-temp' : 'status-ing');
           var rowStr   = encodeURIComponent(JSON.stringify(r));
-          html += '<tr onclick="loadToEdit(&quot;' + rowStr + '&quot;, &quot;devTab&quot;)">' +
-            '<td><b>' + r.hospital + '</b><br><small class="grey-text">' + r.date + '</small></td>' +
-            '<td><b>' + (r.product||'-') + '</b><br><small class="grey-text">' + (r.cat1||'') + (r.cat2 ? ' &gt; '+r.cat2 : '') + '</small></td>' +
-            '<td><div style="font-weight:500; margin-bottom:3px;">Q. ' + (r.content||'') + '</div>' +
+          html += '<tr>' +
+            '<td onclick="loadToEdit(&quot;' + rowStr + '&quot;, &quot;devTab&quot;)"><b>' + r.hospital + '</b><br><small class="grey-text">' + r.date + '</small></td>' +
+            '<td onclick="loadToEdit(&quot;' + rowStr + '&quot;, &quot;devTab&quot;)"><b>' + (r.product||'-') + '</b><br><small class="grey-text">' + (r.cat1||'') + (r.cat2 ? ' &gt; '+r.cat2 : '') + '</small></td>' +
+            '<td onclick="loadToEdit(&quot;' + rowStr + '&quot;, &quot;devTab&quot;)"><div style="font-weight:500; margin-bottom:3px;">Q. ' + (r.content||'') + '</div>' +
             '<div style="color:#558b2f; font-size:0.85rem;">A. ' + (r.answer||'') + '</div>' +
             '<small class="grey-text">' + (r.receiver||'') + '</small></td>' +
-            '<td style="text-align:center;"><span class="dev-badge ' + devCls + '">' + devLabel + '</span></td>' +
+            '<td style="text-align:center;">' +
+              '<div class="dev-inline-select-wrap">' +
+                '<span class="dev-badge ' + devCls + ' clickable" ' +
+                  'onclick="toggleDevMenu(event, this, ' + r.index + ', &quot;' + (r.devStatus||'') + '&quot;)">' +
+                  devLabel +
+                '</span>' +
+              '</div>' +
+            '</td>' +
             '</tr>';
         });
         html += '</tbody></table>';
         area.innerHTML = html;
+
+        // 다른 곳 클릭 시 메뉴 닫기
+        setTimeout(function(){
+          document.addEventListener('click', closeAllDevMenus, { once: false });
+        }, 0);
+      }
+
+      function closeAllDevMenus(e) {
+        if (e && e.target && e.target.classList.contains('clickable')) return;
+        document.querySelectorAll('.dev-inline-menu').forEach(function(m){ m.remove(); });
+      }
+
+      function toggleDevMenu(event, badgeEl, rowIndex, currentStatus) {
+        event.stopPropagation();
+        // 이미 열려있으면 닫기
+        var existing = badgeEl.parentElement.querySelector('.dev-inline-menu');
+        document.querySelectorAll('.dev-inline-menu').forEach(function(m){ m.remove(); });
+        if (existing) return;
+
+        var options = [
+          { value: '논의필요', label: '💬 논의필요' },
+          { value: '진행확정', label: '✅ 진행확정' },
+          { value: '진행불가', label: '❌ 진행불가' },
+        ];
+        var menu = document.createElement('div');
+        menu.className = 'dev-inline-menu';
+        options.forEach(function(opt) {
+          var btn = document.createElement('button');
+          btn.textContent = opt.label;
+          if (opt.value === currentStatus) btn.className = 'active-opt';
+          btn.onclick = function(e) {
+            e.stopPropagation();
+            updateDevStatus(rowIndex, opt.value, badgeEl);
+            menu.remove();
+          };
+          menu.appendChild(btn);
+        });
+        // 구분선 + 미선택 옵션
+        var divider = document.createElement('div');
+        divider.className = 'menu-divider';
+        menu.appendChild(divider);
+        var clearBtn = document.createElement('button');
+        clearBtn.textContent = '✕ 미선택';
+        clearBtn.style.color = '#9e9e9e';
+        clearBtn.onclick = function(e) {
+          e.stopPropagation();
+          updateDevStatus(rowIndex, '', badgeEl);
+          menu.remove();
+        };
+        menu.appendChild(clearBtn);
+        badgeEl.parentElement.appendChild(menu);
+      }
+
+      function updateDevStatus(rowIndex, newStatus, badgeEl) {
+        badgeEl.classList.add('dev-saving');
+        // devAllData에서 해당 row 찾아 전체 form 구성
+        var row = devAllData.find(function(r){ return r.index == rowIndex; });
+        if (!row) { badgeEl.classList.remove('dev-saving'); return; }
+        var form = {
+          index: row.index, date: row.date, hospital: row.hospital, dept: row.dept || '',
+          caller: row.caller || '', callback: row.callback || '', duration: row.duration || '',
+          product: row.product || '', callType: row.type || '', category1: row.cat1 || '',
+          category2: row.cat2 || '', content: row.content || '', answer: row.answer || '',
+          status: row.status, receiver: row.receiver || '', rawContent: row.rawContent || '',
+          devStatus: newStatus
+        };
+        gasCall('updateCsLog', form, function(res) {
+          if (res === 'UPDATED') {
+            // devAllData 캐시 업데이트
+            row.devStatus = newStatus;
+            // 배지 UI 즉시 갱신
+            var devCls = 'dev-' + (newStatus || 'none');
+            badgeEl.className = 'dev-badge ' + devCls + ' clickable';
+            badgeEl.textContent = newStatus || '-';
+            // onclick 업데이트 (새 상태 반영)
+            badgeEl.setAttribute('onclick', 'toggleDevMenu(event, this, ' + rowIndex + ', &quot;' + newStatus + '&quot;)');
+            badgeEl.classList.remove('dev-saving');
+            // 카운트 카드 갱신
+            document.getElementById('devCntTotal').innerText   = devAllData.length;
+            document.getElementById('devCntDiscuss').innerText = devAllData.filter(function(r){ return r.devStatus === '논의필요'; }).length;
+            document.getElementById('devCntConfirm').innerText = devAllData.filter(function(r){ return r.devStatus === '진행확정'; }).length;
+            document.getElementById('devCntReject').innerText  = devAllData.filter(function(r){ return r.devStatus === '진행불가'; }).length;
+            M.toast({html: '✅ 개발현황이 변경되었습니다.', classes: 'rounded'});
+          } else {
+            badgeEl.classList.remove('dev-saving');
+            alert('저장 오류: ' + res);
+          }
+        }, function(err) {
+          badgeEl.classList.remove('dev-saving');
+          alert('오류: ' + err.message);
+        });
       }
 
             function loadStats() { var start = document.getElementById('statStart').value; var end = document.getElementById('statEnd').value; var hosp = document.getElementById('statHospital').value; var caller = document.getElementById('statCaller').value; var recv = document.getElementById('statReceiver').value; document.getElementById('statLoader').style.display = 'block'; gasCall("getDashboardStats", {startDate: start, endDate: end, hospital: hosp, caller: caller, receiver: recv}, function(stats){ document.getElementById('statLoader').style.display = 'none'; document.getElementById('statTotalCount').innerText = stats.total.toLocaleString() + "건"; document.getElementById('statProcessRate').innerText = stats.rate + "%"; renderChart('chartHospital', 'bar', { labels: stats.topHospitals.map(x => x.label), datasets: [{ label: '문의 건수', data: stats.topHospitals.map(x => x.data), backgroundColor: 'rgba(63, 81, 181, 0.7)', borderColor: 'rgba(63, 81, 181, 1)', borderWidth: 1 }] }, { indexAxis: 'y' }); renderChart('chartCallerGraph', 'bar', { labels: stats.topCallers.map(x => x.label), datasets: [{ label: '문의 건수', data: stats.topCallers.map(x => x.data), backgroundColor: 'rgba(0, 150, 136, 0.7)', borderColor: 'rgba(0, 150, 136, 1)', borderWidth: 1 }] }, { indexAxis: 'y' }); renderChart('chartCategory', 'doughnut', { labels: stats.topCategories.map(x => x.label), datasets: [{ data: stats.topCategories.map(x => x.data), backgroundColor: ['#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3'] }] }); renderChart('chartTrend', 'line', { labels: stats.monthlyTrend.map(x => x.label), datasets: [{ label: '월별 발생 건수', data: stats.monthlyTrend.map(x => x.data), borderColor: '#ff9800', backgroundColor: 'rgba(255, 152, 0, 0.1)', fill: true, tension: 0.3 }] }); }); }
@@ -1091,5 +1206,3 @@
     </script>
   </body>
 </html>
-
-
