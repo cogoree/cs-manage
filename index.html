@@ -449,7 +449,7 @@
         </div>
 
         <div id="todoTab" class="col s12 main-card tab-content">
-          <div class="section-label"><i class="material-icons">playlist_add_check</i>나의 할 일 (To-Do List)<button class="btn-small indigo lighten-1 waves-effect right" onclick="loadTodoList()"><i class="material-icons left">refresh</i>새로고침</button></div>
+          <div class="section-label"><i class="material-icons">playlist_add_check</i>나의 할 일 (To-Do List)<button class="btn-small indigo lighten-1 waves-effect right" onclick="loadTodoList(true)"><i class="material-icons left">refresh</i>새로고침</button></div>
           <div id="todoLoader" class="progress indigo lighten-4"><div class="indeterminate indigo"></div></div>
           <div id="todoListArea" style="overflow-x:auto;"></div>
         </div>
@@ -498,7 +498,7 @@
         </div>
 
         <div id="devTab" class="col s12 main-card tab-content">
-          <div class="section-label"><i class="material-icons">developer_board</i>개발 진행 현황</div>
+          <div class="section-label"><i class="material-icons">developer_board</i>개발 진행 현황<button class="btn-small indigo lighten-1 waves-effect right" onclick="loadDevStatus(true)"><i class="material-icons left">refresh</i>새로고침</button></div>
           <div class="filter-container">
             <div class="filter-item"><label class="custom-label">시작일</label><input id="devStart" type="date"></div>
             <div class="filter-item"><label class="custom-label">종료일</label><input id="devEnd" type="date"></div>
@@ -607,7 +607,18 @@
         document.getElementById('statEnd').value = today;
         document.getElementById('devStart').value = today.substring(0, 4) + "-01-01";
         document.getElementById('devEnd').value = today;
-        gasCall("getInitialData", null, initData);
+        // ✅ getInitialData 캐싱 (1시간)
+        var _cached = localStorage.getItem('csInitData');
+        var _cachedAt = parseInt(localStorage.getItem('csInitDataAt') || '0');
+        if (_cached && (Date.now() - _cachedAt < 60 * 60 * 1000)) {
+          initData(JSON.parse(_cached));
+        } else {
+          gasCall("getInitialData", null, function(data) {
+            localStorage.setItem('csInitData', JSON.stringify(data));
+            localStorage.setItem('csInitDataAt', Date.now().toString());
+            initData(data);
+          });
+        }
         
         if ('webkitSpeechRecognition' in window) {
           recognition = new webkitSpeechRecognition();
@@ -772,12 +783,14 @@
         }, function(err){ btnElement.innerText = originalText; btnElement.disabled = false; alert("오류: " + err.message); });
       }
 
-      function loadTodoList() { 
+      function loadTodoList(force) { 
+        if (!force && _todoLoaded) return;
         var div = document.getElementById('todoListArea'); document.getElementById('todoLoader').style.display = 'block'; 
         gasCall("getMyTodoList", currentUser, function(data){ 
           document.getElementById('todoLoader').style.display = 'none'; 
           if(!data || data.length===0) { div.innerHTML='<div class="center" style="padding:50px;"><i class="material-icons large grey-text text-lighten-2">task_alt</i><br><h5 class="grey-text">할 일이 없습니다. 완벽해요!</h5></div>'; return; } 
           var html = '<table class="log-table"><thead><tr><th style="width:80px; text-align:center;">경과</th><th>병원/날짜</th><th>내용 (질문/답변)</th><th style="width: 140px; min-width:140px;">발신자/번호</th><th style="width: 80px; text-align: center;">상태</th></tr></thead><tbody>'; 
+          _todoLoaded = true;
           data.forEach(r => { 
             var rowStr = encodeURIComponent(JSON.stringify(r)); 
             var dDayStyle = "background:#e0e0e0; color:#616161;"; var dayNum = parseInt(r.dTag.replace("D+","")) || 0; 
@@ -788,10 +801,15 @@
         }); 
       }
       
+      var _searchBtn = null;
       function searchLogs() { 
         var s = document.getElementById('searchStart').value; var e = document.getElementById('searchEnd').value; var ing = document.getElementById('searchOnlyIng').checked; var hosp = document.getElementById('searchHospital').value; var caller = document.getElementById('searchCaller').value; var recv = document.getElementById('searchReceiver').value; 
+        // ✅ 중복 요청 방지 - 버튼 비활성화
+        _searchBtn = document.querySelector('#searchTab .filter-btn');
+        if (_searchBtn) { _searchBtn.disabled = true; _searchBtn.innerText = '조회 중...'; }
         var div = document.getElementById('searchResultArea'); div.innerHTML='<div class="progress"><div class="indeterminate"></div></div>'; 
         gasCall("searchCsLogs", {startDate: s, endDate: e, onlyIng: ing, hospital: hosp, caller: caller, receiver: recv}, function(data){ 
+          if (_searchBtn) { _searchBtn.disabled = false; _searchBtn.innerText = '조회'; }
           if(!data || data.length===0) { div.innerHTML='<p class="center grey-text">결과 없음</p>'; return; } 
           var html = '<table class="log-table"><thead><tr><th>병원/날짜</th><th>내용/답변</th><th style="width: 140px; min-width:140px;">발신자/번호</th><th style="width: 80px; text-align: center;">상태</th><th style="width: 100px; text-align: center;">동작</th></tr></thead><tbody>'; 
           data.forEach(r => { 
@@ -826,17 +844,26 @@
   var tNode2 = Array.from(btn.childNodes).find(function(n){ return n.nodeType === Node.TEXT_NODE && n.textContent.trim(); });
   if(tNode2) tNode2.textContent = 'DB에 저장하기';
   btn.classList.remove('btn-update'); document.getElementById('editIndex').value = ''; resetEntryForm(); }
-      function deleteData() { var index = document.getElementById('editIndex').value; if(!index) return; if(!confirm('정말 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.')) return; var btn = document.getElementById('btnSave'); btn.disabled = true; btn.innerText = "삭제 중..."; gasCall("deleteCsLog", index, function(res){ btn.disabled = false; btn.innerText = "DB에 저장하기"; if(res === "DELETED") { alert("🗑️ 삭제되었습니다."); goBackToList(); } else { alert("오류: " + res); } }); }
+      function deleteData() { var index = document.getElementById('editIndex').value; if(!index) return; if(!confirm('정말 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.')) return; var btn = document.getElementById('btnSave'); btn.disabled = true; btn.innerText = "삭제 중..."; gasCall("deleteCsLog", index, function(res){ btn.disabled = false; btn.innerText = "DB에 저장하기"; if(res === "DELETED") { _todoLoaded = false; _devLoaded = false; alert("🗑️ 삭제되었습니다."); goBackToList(); } else { alert("오류: " + res); } }); }
 
       // ✅ 전체 조회 데이터 캐시 (카드 클릭 필터링용)
       var devAllData = [];
+      // ✅ 탭 캐싱
+      var _todoLoaded = false;
+      var _devLoaded  = false;
 
-      function loadDevStatus() {
+      function loadDevStatus(force) {
         var start  = document.getElementById('devStart').value;
         var end    = document.getElementById('devEnd').value;
         var loader = document.getElementById('devLoader');
         var area   = document.getElementById('devResultArea');
         var summary = document.getElementById('devStatSummary');
+
+        // ✅ 캐시 있으면 재사용 (새로고침 버튼은 force=true)
+        if (!force && _devLoaded && devAllData.length > 0) {
+          filterDevTable('');
+          return;
+        }
 
         loader.style.display = 'block';
         area.innerHTML = '';
@@ -860,6 +887,7 @@
           document.getElementById('devCntConfirm').innerText = devAllData.filter(function(r){ return r.devStatus === '진행확정'; }).length;
           document.getElementById('devCntReject').innerText  = devAllData.filter(function(r){ return r.devStatus === '진행불가'; }).length;
           summary.style.display = 'block';
+          _devLoaded = true;
 
           // 기본: 전체 출력 (카드 선택 초기화)
           filterDevTable('');
@@ -1142,7 +1170,9 @@
               closeTempModal();
               discardAndStartNew(); 
             } else {
-              if(isEditMode) goBackToList(); else resetEntryForm(); 
+              // ✅ 저장/수정 후 탭 캐시 무효화 (다음 방문 시 최신 데이터 반영)
+            _todoLoaded = false; _devLoaded = false;
+            if(isEditMode) goBackToList(); else resetEntryForm(); 
             }
           } else { alert('오류: '+res); } 
         } 
