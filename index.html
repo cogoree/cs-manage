@@ -836,7 +836,7 @@
             var devLabel = r.devStatus || '-';
             var stClass = r.status.includes('완료') ? 'status-done' : (r.status.includes('임시') ? 'status-temp' : 'status-ing');
             var rowStr = encodeURIComponent(JSON.stringify(r));
-            html += '<tr onclick="loadToEdit('' + rowStr + '', 'devTab')">' +
+            html += '<tr onclick="loadToEdit(&quot;' + rowStr + '&quot;, &quot;devTab&quot;)">' +
               '<td><b>' + r.hospital + '</b><br><small class="grey-text">' + r.date + '</small></td>' +
               '<td><b>' + (r.product||'-') + '</b><br><small class="grey-text">' + (r.cat1||'') + (r.cat2 ? ' > '+r.cat2 : '') + '</small></td>' +
               '<td><div style="font-weight:500; margin-bottom:3px;">Q. ' + (r.content||'') + '</div>' +
