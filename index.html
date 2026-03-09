@@ -988,8 +988,11 @@
 
       function selectDevOption(newStatus) {
         if (_devPopupBadge === null) return;
+        // closeDevPopup() 호출 전에 참조 먼저 저장 (close 시 null로 초기화되기 때문)
+        var savedBadge = _devPopupBadge;
+        var savedIndex = _devPopupIndex;
         closeDevPopup();
-        updateDevStatus(_devPopupIndex, newStatus, _devPopupBadge);
+        updateDevStatus(savedIndex, newStatus, savedBadge);
       }
 
       function closeAllDevMenus() {}  // 호환성 유지용 빈 함수
