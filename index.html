@@ -1018,8 +1018,10 @@
             var devCls = 'dev-' + (newStatus || 'none');
             badgeEl.className = 'dev-badge ' + devCls + ' clickable';
             badgeEl.textContent = newStatus || '-';
-            // onclick 업데이트 (새 상태 반영)
-            badgeEl.setAttribute('onclick', 'toggleDevMenu(event, this, ' + rowIndex + ', &quot;' + newStatus + '&quot;)');
+            // onclick 업데이트 (새 상태 반영) - setAttribute 대신 직접 함수 교체 (&quot; 파싱 오류 방지)
+            badgeEl.onclick = (function(idx, status) {
+              return function(e) { toggleDevMenu(e, badgeEl, idx, status); };
+            })(rowIndex, newStatus);
             badgeEl.classList.remove('dev-saving');
             // 카운트 카드 갱신
             document.getElementById('devCntTotal').innerText   = devAllData.length;
