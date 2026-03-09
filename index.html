@@ -231,6 +231,7 @@
       .dev-stat-box { flex: 1; min-width: 140px; background: white; border-radius: 10px; padding: 18px 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); text-align: center; border: 1px solid #eee; }
       .dev-stat-box .dsb-val { font-size: 2.2rem; font-weight: 800; line-height: 1.1; }
       .dev-stat-box .dsb-label { font-size: 0.95rem; color: #757575; margin-top: 4px; }
+      .dev-stat-box:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.12); transform: translateY(-2px); transition: 0.15s; }
     </style>
   </head>
   <body>
@@ -463,30 +464,39 @@
 
         <div id="devTab" class="col s12 main-card tab-content">
           <div class="section-label"><i class="material-icons">developer_board</i>개발 진행 현황</div>
+
+          <!-- 날짜 필터 (이력 조회와 동일한 스타일) -->
           <div class="filter-container">
             <div class="filter-item"><label class="custom-label">시작일</label><input id="devStart" type="date"></div>
             <div class="filter-item"><label class="custom-label">종료일</label><input id="devEnd" type="date"></div>
-            <div class="filter-item"><label class="custom-label">병원명</label><input id="devHospital" type="text" placeholder="전체"></div>
-            <div class="filter-item"><label class="custom-label">제품</label><input id="devProduct" type="text" placeholder="전체"></div>
-            <div class="filter-item">
-              <label class="custom-label">진행 상태</label>
-              <select id="devStatusFilter" class="browser-default">
-                <option value="">전체</option>
-                <option value="논의필요">💬 논의필요</option>
-                <option value="진행확정">✅ 진행확정</option>
-                <option value="진행불가">❌ 진행불가</option>
-              </select>
-            </div>
             <div class="filter-actions">
               <button class="btn indigo darken-1 waves-effect filter-btn" onclick="loadDevStatus()">조회</button>
             </div>
           </div>
-          <div id="devStatSummary" class="dev-stat-row" style="display:none;">
-            <div class="dev-stat-box"><div class="dsb-val" id="devCntTotal" style="color:#3f51b5;">-</div><div class="dsb-label">전체</div></div>
-            <div class="dev-stat-box"><div class="dsb-val" id="devCntDiscuss" style="color:#f57f17;">-</div><div class="dsb-label">💬 논의필요</div></div>
-            <div class="dev-stat-box"><div class="dsb-val" id="devCntConfirm" style="color:#2e7d32;">-</div><div class="dsb-label">✅ 진행확정</div></div>
-            <div class="dev-stat-box"><div class="dsb-val" id="devCntReject" style="color:#c62828;">-</div><div class="dsb-label">❌ 진행불가</div></div>
+
+          <!-- 요약 카드 (클릭 필터 가능) -->
+          <div id="devStatSummary" style="display:none; margin-bottom:24px;">
+            <div style="display:flex; gap:12px; flex-wrap:wrap;">
+              <div class="dev-stat-box" id="devCardTotal" onclick="filterDevTable('')" style="cursor:pointer; flex:1; min-width:120px;">
+                <div class="dsb-val" id="devCntTotal" style="color:#3f51b5;">-</div>
+                <div class="dsb-label">전체</div>
+              </div>
+              <div class="dev-stat-box" id="devCardDiscuss" onclick="filterDevTable('논의필요')" style="cursor:pointer; flex:1; min-width:120px;">
+                <div class="dsb-val" id="devCntDiscuss" style="color:#f57f17;">-</div>
+                <div class="dsb-label">💬 논의필요</div>
+              </div>
+              <div class="dev-stat-box" id="devCardConfirm" onclick="filterDevTable('진행확정')" style="cursor:pointer; flex:1; min-width:120px;">
+                <div class="dsb-val" id="devCntConfirm" style="color:#2e7d32;">-</div>
+                <div class="dsb-label">✅ 진행확정</div>
+              </div>
+              <div class="dev-stat-box" id="devCardReject" onclick="filterDevTable('진행불가')" style="cursor:pointer; flex:1; min-width:120px;">
+                <div class="dsb-val" id="devCntReject" style="color:#c62828;">-</div>
+                <div class="dsb-label">❌ 진행불가</div>
+              </div>
+            </div>
+            <div id="devActiveFilter" style="margin-top:10px; font-size:0.85rem; color:#757575; min-height:20px;"></div>
           </div>
+
           <div id="devLoader" class="progress indigo lighten-4" style="display:none;"><div class="indeterminate indigo"></div></div>
           <div id="devResultArea" style="overflow-x:auto;"><p class="center grey-text" style="padding:50px;">조건을 입력하고 조회를 눌러주세요.</p></div>
         </div>
@@ -784,79 +794,108 @@
   btn.classList.remove('btn-update'); document.getElementById('editIndex').value = ''; resetEntryForm(); }
       function deleteData() { var index = document.getElementById('editIndex').value; if(!index) return; if(!confirm('정말 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.')) return; var btn = document.getElementById('btnSave'); btn.disabled = true; btn.innerText = "삭제 중..."; gasCall("deleteCsLog", index, function(res){ btn.disabled = false; btn.innerText = "DB에 저장하기"; if(res === "DELETED") { alert("🗑️ 삭제되었습니다."); goBackToList(); } else { alert("오류: " + res); } }); }
 
+      // ✅ 전체 조회 데이터 캐시 (카드 클릭 필터링용)
+      var devAllData = [];
+
       function loadDevStatus() {
-        var start   = document.getElementById('devStart').value;
-        var end     = document.getElementById('devEnd').value;
-        var hosp    = document.getElementById('devHospital').value;
-        var prod    = document.getElementById('devProduct').value;
-        var filter  = document.getElementById('devStatusFilter').value;
-        var loader  = document.getElementById('devLoader');
-        var area    = document.getElementById('devResultArea');
+        var start  = document.getElementById('devStart').value;
+        var end    = document.getElementById('devEnd').value;
+        var loader = document.getElementById('devLoader');
+        var area   = document.getElementById('devResultArea');
         var summary = document.getElementById('devStatSummary');
 
         loader.style.display = 'block';
         area.innerHTML = '';
         summary.style.display = 'none';
+        devAllData = [];
 
-        gasCall('searchCsLogs', {startDate: start || '2000-01-01', endDate: end || '2099-12-31', onlyIng: false, hospital: hosp, caller: '', receiver: ''}, function(data) {
+        gasCall('searchCsLogs', {startDate: start || '2000-01-01', endDate: end || '2099-12-31', onlyIng: false, hospital: '', caller: '', receiver: ''}, function(data) {
           loader.style.display = 'none';
 
-          // devStatus 있는 것만 + 제품/상태 필터
-          var filtered = data.filter(function(r) {
-            if (!r.devStatus) return false;
-            if (prod && !String(r.product).toLowerCase().includes(prod.toLowerCase())) return false;
-            if (filter && r.devStatus !== filter) return false;
-            return true;
-          });
+          // devStatus 있는 항목만
+          devAllData = data.filter(function(r) { return r.devStatus && r.devStatus.trim() !== ''; });
 
-          if (filtered.length === 0) {
-            area.innerHTML = '<p class="center grey-text" style="padding:50px;">개발 진행 현황 데이터가 없습니다.</p>';
+          if (devAllData.length === 0) {
+            area.innerHTML = '<p class="center grey-text" style="padding:50px;">개발 진행 현황으로 등록된 데이터가 없습니다.</p>';
             return;
           }
 
-          // 요약 카드
-          var cntDiscuss = filtered.filter(function(r){ return r.devStatus === '논의필요'; }).length;
-          var cntConfirm = filtered.filter(function(r){ return r.devStatus === '진행확정'; }).length;
-          var cntReject  = filtered.filter(function(r){ return r.devStatus === '진행불가'; }).length;
-          document.getElementById('devCntTotal').innerText   = filtered.length;
-          document.getElementById('devCntDiscuss').innerText = cntDiscuss;
-          document.getElementById('devCntConfirm').innerText = cntConfirm;
-          document.getElementById('devCntReject').innerText  = cntReject;
-          summary.style.display = 'flex';
+          // 요약 카드 숫자 업데이트
+          document.getElementById('devCntTotal').innerText   = devAllData.length;
+          document.getElementById('devCntDiscuss').innerText = devAllData.filter(function(r){ return r.devStatus === '논의필요'; }).length;
+          document.getElementById('devCntConfirm').innerText = devAllData.filter(function(r){ return r.devStatus === '진행확정'; }).length;
+          document.getElementById('devCntReject').innerText  = devAllData.filter(function(r){ return r.devStatus === '진행불가'; }).length;
+          summary.style.display = 'block';
 
-          // 테이블
-          var html = '<table class="log-table"><thead><tr>' +
-            '<th>병원 / 날짜</th>' +
-            '<th>제품 / 분류</th>' +
-            '<th>질문 / 답변</th>' +
-            '<th style="width:90px; text-align:center;">개발현황</th>' +
-            '<th style="width:80px; text-align:center;">상태</th>' +
-            '</tr></thead><tbody>';
-
-          filtered.forEach(function(r) {
-            var devCls = 'dev-' + (r.devStatus || 'none');
-            var devLabel = r.devStatus || '-';
-            var stClass = r.status.includes('완료') ? 'status-done' : (r.status.includes('임시') ? 'status-temp' : 'status-ing');
-            var rowStr = encodeURIComponent(JSON.stringify(r));
-            html += '<tr onclick="loadToEdit(&quot;' + rowStr + '&quot;, &quot;devTab&quot;)">' +
-              '<td><b>' + r.hospital + '</b><br><small class="grey-text">' + r.date + '</small></td>' +
-              '<td><b>' + (r.product||'-') + '</b><br><small class="grey-text">' + (r.cat1||'') + (r.cat2 ? ' > '+r.cat2 : '') + '</small></td>' +
-              '<td><div style="font-weight:500; margin-bottom:3px;">Q. ' + (r.content||'') + '</div>' +
-              '<div style="color:#558b2f; font-size:0.85rem;">A. ' + (r.answer||'') + '</div>' +
-              '<small class="grey-text">' + (r.receiver||'') + '</small></td>' +
-              '<td style="text-align:center;"><span class="dev-badge ' + devCls + '">' + devLabel + '</span></td>' +
-              '<td style="text-align:center;"><span class="status-badge ' + stClass + '">' + r.status + '</span></td>' +
-              '</tr>';
-          });
-          html += '</tbody></table>';
-          area.innerHTML = html;
+          // 기본: 전체 출력 (카드 선택 초기화)
+          filterDevTable('');
         }, function(err) {
           loader.style.display = 'none';
           area.innerHTML = '<p class="center red-text">오류: ' + err.message + '</p>';
         });
       }
 
-      function loadStats() { var start = document.getElementById('statStart').value; var end = document.getElementById('statEnd').value; var hosp = document.getElementById('statHospital').value; var caller = document.getElementById('statCaller').value; var recv = document.getElementById('statReceiver').value; document.getElementById('statLoader').style.display = 'block'; gasCall("getDashboardStats", {startDate: start, endDate: end, hospital: hosp, caller: caller, receiver: recv}, function(stats){ document.getElementById('statLoader').style.display = 'none'; document.getElementById('statTotalCount').innerText = stats.total.toLocaleString() + "건"; document.getElementById('statProcessRate').innerText = stats.rate + "%"; renderChart('chartHospital', 'bar', { labels: stats.topHospitals.map(x => x.label), datasets: [{ label: '문의 건수', data: stats.topHospitals.map(x => x.data), backgroundColor: 'rgba(63, 81, 181, 0.7)', borderColor: 'rgba(63, 81, 181, 1)', borderWidth: 1 }] }, { indexAxis: 'y' }); renderChart('chartCallerGraph', 'bar', { labels: stats.topCallers.map(x => x.label), datasets: [{ label: '문의 건수', data: stats.topCallers.map(x => x.data), backgroundColor: 'rgba(0, 150, 136, 0.7)', borderColor: 'rgba(0, 150, 136, 1)', borderWidth: 1 }] }, { indexAxis: 'y' }); renderChart('chartCategory', 'doughnut', { labels: stats.topCategories.map(x => x.label), datasets: [{ data: stats.topCategories.map(x => x.data), backgroundColor: ['#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3'] }] }); renderChart('chartTrend', 'line', { labels: stats.monthlyTrend.map(x => x.label), datasets: [{ label: '월별 발생 건수', data: stats.monthlyTrend.map(x => x.data), borderColor: '#ff9800', backgroundColor: 'rgba(255, 152, 0, 0.1)', fill: true, tension: 0.3 }] }); }); }
+      function filterDevTable(status) {
+        var area = document.getElementById('devResultArea');
+
+        // 카드 활성화 표시
+        ['devCardTotal','devCardDiscuss','devCardConfirm','devCardReject'].forEach(function(id) {
+          document.getElementById(id).style.boxShadow = '';
+          document.getElementById(id).style.borderColor = '';
+        });
+        var activeLabel = '전체';
+        if (status === '') {
+          document.getElementById('devCardTotal').style.boxShadow = '0 0 0 2px #3f51b5';
+        } else if (status === '논의필요') {
+          document.getElementById('devCardDiscuss').style.boxShadow = '0 0 0 2px #f57f17';
+          activeLabel = '💬 논의필요';
+        } else if (status === '진행확정') {
+          document.getElementById('devCardConfirm').style.boxShadow = '0 0 0 2px #2e7d32';
+          activeLabel = '✅ 진행확정';
+        } else if (status === '진행불가') {
+          document.getElementById('devCardReject').style.boxShadow = '0 0 0 2px #c62828';
+          activeLabel = '❌ 진행불가';
+        }
+        var filterLabel = document.getElementById('devActiveFilter');
+        if(filterLabel) filterLabel.innerHTML = status ? '현재 필터: <b>' + activeLabel + '</b>' : '';
+
+        // 데이터 필터링
+        var filtered = status ? devAllData.filter(function(r){ return r.devStatus === status; }) : devAllData;
+
+        if (filtered.length === 0) {
+          area.innerHTML = '<p class="center grey-text" style="padding:30px;">' + activeLabel + ' 항목이 없습니다.</p>';
+          return;
+        }
+
+        // 테이블 렌더링
+        var html = '<table class="log-table"><thead><tr>' +
+          '<th>병원 / 날짜</th>' +
+          '<th>제품 / 분류</th>' +
+          '<th>질문 / 답변</th>' +
+          '<th style="width:90px; text-align:center;">개발현황</th>' +
+          '<th style="width:80px; text-align:center;">상태</th>' +
+          '</tr></thead><tbody>';
+
+        filtered.forEach(function(r) {
+          var devCls   = 'dev-' + (r.devStatus || 'none');
+          var devLabel = r.devStatus || '-';
+          var stClass  = r.status.includes('완료') ? 'status-done' : (r.status.includes('임시') ? 'status-temp' : 'status-ing');
+          var rowStr   = encodeURIComponent(JSON.stringify(r));
+          html += '<tr onclick="loadToEdit(&quot;' + rowStr + '&quot;, &quot;devTab&quot;)">' +
+            '<td><b>' + r.hospital + '</b><br><small class="grey-text">' + r.date + '</small></td>' +
+            '<td><b>' + (r.product||'-') + '</b><br><small class="grey-text">' + (r.cat1||'') + (r.cat2 ? ' &gt; '+r.cat2 : '') + '</small></td>' +
+            '<td><div style="font-weight:500; margin-bottom:3px;">Q. ' + (r.content||'') + '</div>' +
+            '<div style="color:#558b2f; font-size:0.85rem;">A. ' + (r.answer||'') + '</div>' +
+            '<small class="grey-text">' + (r.receiver||'') + '</small></td>' +
+            '<td style="text-align:center;"><span class="dev-badge ' + devCls + '">' + devLabel + '</span></td>' +
+            '<td style="text-align:center;"><span class="status-badge ' + stClass + '">' + r.status + '</span></td>' +
+            '</tr>';
+        });
+        html += '</tbody></table>';
+        area.innerHTML = html;
+      }
+
+            function loadStats() { var start = document.getElementById('statStart').value; var end = document.getElementById('statEnd').value; var hosp = document.getElementById('statHospital').value; var caller = document.getElementById('statCaller').value; var recv = document.getElementById('statReceiver').value; document.getElementById('statLoader').style.display = 'block'; gasCall("getDashboardStats", {startDate: start, endDate: end, hospital: hosp, caller: caller, receiver: recv}, function(stats){ document.getElementById('statLoader').style.display = 'none'; document.getElementById('statTotalCount').innerText = stats.total.toLocaleString() + "건"; document.getElementById('statProcessRate').innerText = stats.rate + "%"; renderChart('chartHospital', 'bar', { labels: stats.topHospitals.map(x => x.label), datasets: [{ label: '문의 건수', data: stats.topHospitals.map(x => x.data), backgroundColor: 'rgba(63, 81, 181, 0.7)', borderColor: 'rgba(63, 81, 181, 1)', borderWidth: 1 }] }, { indexAxis: 'y' }); renderChart('chartCallerGraph', 'bar', { labels: stats.topCallers.map(x => x.label), datasets: [{ label: '문의 건수', data: stats.topCallers.map(x => x.data), backgroundColor: 'rgba(0, 150, 136, 0.7)', borderColor: 'rgba(0, 150, 136, 1)', borderWidth: 1 }] }, { indexAxis: 'y' }); renderChart('chartCategory', 'doughnut', { labels: stats.topCategories.map(x => x.label), datasets: [{ data: stats.topCategories.map(x => x.data), backgroundColor: ['#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3'] }] }); renderChart('chartTrend', 'line', { labels: stats.monthlyTrend.map(x => x.label), datasets: [{ label: '월별 발생 건수', data: stats.monthlyTrend.map(x => x.data), borderColor: '#ff9800', backgroundColor: 'rgba(255, 152, 0, 0.1)', fill: true, tension: 0.3 }] }); }); }
       function renderChart(canvasId, type, data, extraOptions) { var ctx = document.getElementById(canvasId).getContext('2d'); if (canvasId === 'chartHospital' && chartHosp) chartHosp.destroy(); if (canvasId === 'chartCategory' && chartCat) chartCat.destroy(); if (canvasId === 'chartTrend' && chartTrend) chartTrend.destroy(); if (canvasId === 'chartCallerGraph' && chartCallerObj) chartCallerObj.destroy(); var config = { type: type, data: data, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: type !== 'bar', position: 'bottom' } }, ...extraOptions } }; var newChart = new Chart(ctx, config); if (canvasId === 'chartHospital') chartHosp = newChart; if (canvasId === 'chartCategory') chartCat = newChart; if (canvasId === 'chartTrend') chartTrend = newChart; if (canvasId === 'chartCallerGraph') chartCallerObj = newChart; }
       function checkUser() { var saved = localStorage.getItem("csUser"); if(saved) { currentUser = saved; document.getElementById('displayUser').innerText = saved + "님"; document.getElementById('setupOverlay').style.display = 'none'; } else document.getElementById('setupOverlay').style.display = 'flex'; }
       function saveUser() { var name = document.getElementById('setupName').value.trim(); if(!name) return alert('이름을 입력하세요'); localStorage.setItem("csUser", name); currentUser = name; document.getElementById('displayUser').innerText = name + "님"; document.getElementById('setupOverlay').style.display = 'none'; }
