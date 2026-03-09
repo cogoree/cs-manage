@@ -376,17 +376,19 @@
                 <div class="label-wrapper"><label class="custom-label" style="color:#2e7d32;">4. 추천 답변 (K열 저장)</label><i id="btn-mic-answer" class="material-icons mic-btn" onclick="toggleVoice('inAnswer', 'caption-answer', this)" title="음성 입력">mic</i><span id="caption-answer" class="live-caption"></span></div>
                 <textarea id="inAnswer" class="custom-textarea" placeholder="AI가 제안한 답변"></textarea>
               </div>
-              <div class="checkbox-wrapper" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+              <div class="checkbox-wrapper" style="padding-bottom: 10px;">
                 <label><input type="checkbox" id="chkComplete"><span><i class="material-icons left">task_alt</i>처리 완료로 표시</span></label>
-                <div style="display:flex; align-items:center; gap:8px;">
-                  <label style="font-size:0.9rem; font-weight:700; color:#1565c0; white-space:nowrap;"><i class="material-icons" style="font-size:1rem; vertical-align:middle; margin-right:3px;">developer_board</i>개발 진행 현황</label>
-                  <select id="inDevStatus" style="width:130px; height:2.4rem; font-size:0.9rem; border-radius:6px; border:1px solid #90caf9; background:#e3f2fd; color:#1565c0; font-weight:700; padding:0 8px;">
-                    <option value="">-미선택-</option>
-                    <option value="논의필요">💬 논의필요</option>
-                    <option value="진행확정">✅ 진행확정</option>
-                    <option value="진행불가">❌ 진행불가</option>
-                  </select>
-                </div>
+              </div>
+              <div style="background:#e3f2fd; border:1px solid #90caf9; border-radius: 8px; padding: 12px 16px; display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                <label style="font-size:0.95rem; font-weight:700; color:#1565c0; margin:0; display:flex; align-items:center; gap:5px;">
+                  <i class="material-icons" style="font-size:1.1rem;">developer_board</i>개발 진행 현황
+                </label>
+                <select id="inDevStatus" style="flex:1; max-width:220px; height:2.4rem; font-size:0.95rem; border-radius:6px; border:1px solid #90caf9; background:white; color:#1565c0; font-weight:700; padding:0 10px;">
+                  <option value="">- 미선택 -</option>
+                  <option value="논의필요">💬 논의필요</option>
+                  <option value="진행확정">✅ 진행확정</option>
+                  <option value="진행불가">❌ 진행불가</option>
+                </select>
               </div>
             </div>
           </div>
