@@ -459,13 +459,9 @@
           </div>
           <div class="row" style="margin-top:40px;"><div class="col s12"><h6 class="center" style="font-weight:700; color:#546e7a;">📅 월별 CS 발생 추이</h6><div style="height:300px;"><canvas id="chartTrend"></canvas></div></div></div>
         </div>
-      </div>
-    </div>
 
         <div id="devTab" class="col s12 main-card tab-content">
           <div class="section-label"><i class="material-icons">developer_board</i>개발 진행 현황</div>
-
-          <!-- 날짜 필터 (이력 조회와 동일한 스타일) -->
           <div class="filter-container">
             <div class="filter-item"><label class="custom-label">시작일</label><input id="devStart" type="date"></div>
             <div class="filter-item"><label class="custom-label">종료일</label><input id="devEnd" type="date"></div>
@@ -473,8 +469,6 @@
               <button class="btn indigo darken-1 waves-effect filter-btn" onclick="loadDevStatus()">조회</button>
             </div>
           </div>
-
-          <!-- 요약 카드 (클릭 필터 가능) -->
           <div id="devStatSummary" style="display:none; margin-bottom:24px;">
             <div style="display:flex; gap:12px; flex-wrap:wrap;">
               <div class="dev-stat-box" id="devCardTotal" onclick="filterDevTable('')" style="cursor:pointer; flex:1; min-width:120px;">
@@ -496,10 +490,13 @@
             </div>
             <div id="devActiveFilter" style="margin-top:10px; font-size:0.85rem; color:#757575; min-height:20px;"></div>
           </div>
-
           <div id="devLoader" class="progress indigo lighten-4" style="display:none;"><div class="indeterminate indigo"></div></div>
           <div id="devResultArea" style="overflow-x:auto;"><p class="center grey-text" style="padding:50px;">조건을 입력하고 조회를 눌러주세요.</p></div>
         </div>
+
+      </div>
+    </div>
+
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
     <script>
