@@ -870,7 +870,6 @@
           '<th>제품 / 분류</th>' +
           '<th>질문 / 답변</th>' +
           '<th style="width:90px; text-align:center;">개발현황</th>' +
-          '<th style="width:80px; text-align:center;">상태</th>' +
           '</tr></thead><tbody>';
 
         filtered.forEach(function(r) {
@@ -885,7 +884,6 @@
             '<div style="color:#558b2f; font-size:0.85rem;">A. ' + (r.answer||'') + '</div>' +
             '<small class="grey-text">' + (r.receiver||'') + '</small></td>' +
             '<td style="text-align:center;"><span class="dev-badge ' + devCls + '">' + devLabel + '</span></td>' +
-            '<td style="text-align:center;"><span class="status-badge ' + stClass + '">' + r.status + '</span></td>' +
             '</tr>';
         });
         html += '</tbody></table>';
@@ -1093,4 +1091,5 @@
     </script>
   </body>
 </html>
+
 
