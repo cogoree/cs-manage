@@ -237,6 +237,13 @@
       </div>
     </div>
 
+    <!-- 전체 API 호출 로딩바 -->
+    <div id="gasLoader" style="display:none; position:fixed; top:0; left:0; width:100%; z-index:9999;">
+      <div class="progress" style="margin:0; border-radius:0;">
+        <div class="indeterminate indigo"></div>
+      </div>
+    </div>
+
     <div id="setupOverlay" style="display:none;">
       <div class="setup-box">
         <h5 style="color:#3f51b5; font-weight:700;">환영합니다!</h5>
@@ -411,7 +418,6 @@
     <script>
       var codeData = { products: [], mapProductToCat1: [], mapCat1ToCat2: [] };
       var GAS_URL = "https://script.google.com/macros/s/AKfycbxjRMFXgcQx9xrU8IRR28XIhdP-ipgge5oqhbWwaQqbDCKCY72L61R0bhXTFZaICtjh/exec";
-      
       // 작은따옴표 등 onclick 속성을 깨는 문자를 안전하게 인코딩
       function safeRowStr(r) {
         return encodeURIComponent(JSON.stringify(r)).replace(/'/g, '%27');
@@ -419,19 +425,22 @@
 
       function gasCall(action, payload, onSuccess, onFailure) {
         // CORS 우회: JSONP 방식 (GET 요청은 CORS 제한 없음)
+        _showGasLoader();
         var cbName = 'cb_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
         var script = document.createElement('script');
         var timer = setTimeout(function() {
+          _hideGasLoader();
           delete window[cbName];
-          document.body.removeChild(script);
+          if (document.body.contains(script)) document.body.removeChild(script);
           var err = new Error('요청 시간 초과');
           if (onFailure) onFailure(err); else alert("오류: " + err.message);
         }, 30000);
 
         window[cbName] = function(res) {
+          _hideGasLoader();
           clearTimeout(timer);
           delete window[cbName];
-          document.body.removeChild(script);
+          if (document.body.contains(script)) document.body.removeChild(script);
           if (res.status === 'success') { if (onSuccess) onSuccess(res.data); }
           else { var err = new Error(res.message); if (onFailure) onFailure(err); else alert("오류: " + res.message); }
         };
@@ -834,4 +843,3 @@
     </script>
   </body>
 </html>
-
