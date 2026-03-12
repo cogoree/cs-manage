@@ -199,87 +199,9 @@
         .stat-card { margin-bottom: 15px; min-height: 180px; }
         .col.s12.m6 { margin-bottom: 0; }
       }
-
-      /* --- 페이지 초기 로딩 오버레이 --- */
-      #pageLoadOverlay {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: #f0f2f5; z-index: 99999;
-        display: flex; flex-direction: column; justify-content: center; align-items: center;
-        transition: opacity 0.4s ease;
-      }
-      #pageLoadOverlay.hiding { opacity: 0; pointer-events: none; }
-      .page-loader-box { text-align: center; }
-      .page-loader-spinner {
-        width: 56px; height: 56px; border-radius: 50%;
-        border: 5px solid #e8eaf6; border-top-color: #3f51b5;
-        animation: spin 0.9s linear infinite; margin: 0 auto 20px;
-      }
-      .page-loader-text { color: #3f51b5; font-size: 1.1rem; font-weight: 700; letter-spacing: -0.3px; }
-      .page-loader-sub  { color: #9e9e9e; font-size: 0.9rem; margin-top: 6px; }
-
-      /* --- 개발 진행 현황 배지 --- */
-      .dev-badge { padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; display: inline-block; min-width: 70px; text-align:center; }
-      .dev-논의필요 { background: #fff8e1; color: #f57f17; border: 1px solid #ffe082; }
-      .dev-진행확정 { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
-      .dev-진행불가 { background: #fce4ec; color: #c62828; border: 1px solid #f48fb1; }
-      .dev-none     { background: #f5f5f5; color: #9e9e9e; border: 1px solid #e0e0e0; }
-      /* 개발현황 탭 select 스타일 */
-      #inDevStatus { background-color: #fafafa; border: 1px solid #e0e0e0; border-radius: 6px; height: 3.2rem; font-size: 1rem; padding: 5px 10px; width: 100%; }
-      #inDevStatus:focus { border-color: #3f51b5; outline: none; }
-      /* 개발현황 탭 카드 */
-      .dev-stat-row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; }
-      .dev-stat-box { flex: 1; min-width: 140px; background: white; border-radius: 10px; padding: 18px 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); text-align: center; border: 1px solid #eee; }
-      .dev-stat-box .dsb-val { font-size: 2.2rem; font-weight: 800; line-height: 1.1; }
-      .dev-stat-box .dsb-label { font-size: 0.95rem; color: #757575; margin-top: 4px; }
-      .dev-stat-box:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.12); transform: translateY(-2px); transition: 0.15s; }
-      /* 개발현황 수정 팝업 */
-      #devEditPopup {
-        position: fixed; z-index: 99999;
-        background: white; border-radius: 12px;
-        box-shadow: 0 8px 30px rgba(0,0,0,0.18);
-        border: 1px solid #e0e0e0; min-width: 180px; padding: 8px 0;
-        animation: fadeIn 0.15s;
-      }
-      #devEditPopup .popup-title {
-        font-size: 0.8rem; color: #9e9e9e; padding: 6px 16px 8px; font-weight: 600;
-        border-bottom: 1px solid #eee; margin-bottom: 4px;
-      }
-      #devEditPopup button {
-        display: block; width: 100%; text-align: left; background: none; border: none;
-        padding: 10px 16px; font-size: 0.92rem; font-weight: 600; cursor: pointer; color: #424242;
-      }
-      #devEditPopup button:hover { background: #f5f5f5; }
-      #devEditPopup button.active-opt { background: #e8eaf6; color: #3f51b5; }
-      #devEditPopup .menu-divider { border-top: 1px solid #eee; margin: 4px 0; }
-      #devEditPopup button.clear-opt { color: #9e9e9e; }
-      #devEditPopupBackdrop {
-        display: none; position: fixed; inset: 0; z-index: 99998;
-      }
-      .dev-badge.clickable { cursor: pointer; }
-      .dev-badge.clickable:hover { opacity: 0.82; transform: scale(1.05); transition: 0.12s; }
-      .dev-saving { opacity: 0.45; pointer-events: none; }
     </style>
   </head>
   <body>
-
-    <div id="pageLoadOverlay">
-      <div class="page-loader-box">
-        <div class="page-loader-spinner"></div>
-        <div class="page-loader-text">CS Manager</div>
-        <div class="page-loader-sub">데이터를 불러오는 중입니다...</div>
-      </div>
-    </div>
-
-    <!-- 개발현황 인라인 수정 팝업 -->
-    <div id="devEditPopupBackdrop" onclick="closeDevPopup()"></div>
-    <div id="devEditPopup" style="display:none;">
-      <div class="popup-title">개발현황 변경</div>
-      <button onclick="selectDevOption('논의필요')">💬 논의필요</button>
-      <button onclick="selectDevOption('진행확정')">✅ 진행확정</button>
-      <button onclick="selectDevOption('진행불가')">❌ 진행불가</button>
-      <div class="menu-divider"></div>
-      <button class="clear-opt" onclick="selectDevOption('')">✕ 미선택</button>
-    </div>
 
     <div id="modal-temp-save" class="modal" style="width: 450px; border-radius: 12px;">
       <div class="modal-content center" style="padding: 40px 24px 20px 24px;">
@@ -352,7 +274,6 @@
             <li class="custom-tab" onclick="switchTab('todoTab', this, false, true)">To Do List</li>
             <li class="custom-tab" onclick="switchTab('searchTab', this)">이력 조회</li>
             <li class="custom-tab" onclick="switchTab('statsTab', this, true)">통계</li>
-            <li class="custom-tab" onclick="switchTab('devTab', this, false, false, true)">개발 현황</li>
           </ul>
         </div>
 
@@ -414,20 +335,7 @@
                 <div class="label-wrapper"><label class="custom-label" style="color:#2e7d32;">4. 추천 답변 (K열 저장)</label><i id="btn-mic-answer" class="material-icons mic-btn" onclick="toggleVoice('inAnswer', 'caption-answer', this)" title="음성 입력">mic</i><span id="caption-answer" class="live-caption"></span></div>
                 <textarea id="inAnswer" class="custom-textarea" placeholder="AI가 제안한 답변"></textarea>
               </div>
-              <div class="checkbox-wrapper" style="padding-bottom: 10px;">
-                <label><input type="checkbox" id="chkComplete"><span><i class="material-icons left">task_alt</i>처리 완료로 표시</span></label>
-              </div>
-              <div style="background:#e3f2fd; border:1px solid #90caf9; border-radius: 8px; padding: 12px 16px; display:flex; align-items:center; justify-content:space-between; gap:10px;">
-                <label style="font-size:0.95rem; font-weight:700; color:#1565c0; margin:0; display:flex; align-items:center; gap:5px;">
-                  <i class="material-icons" style="font-size:1.1rem;">developer_board</i>개발 진행 현황
-                </label>
-                <select id="inDevStatus" class="browser-default" style="flex:1; max-width:220px; height:2.4rem; font-size:0.95rem; border-radius:6px; border:1px solid #90caf9; background:white; color:#1565c0; font-weight:700; padding:0 10px; display:block !important;">
-                  <option value="">- 미선택 -</option>
-                  <option value="논의필요">💬 논의필요</option>
-                  <option value="진행확정">✅ 진행확정</option>
-                  <option value="진행불가">❌ 진행불가</option>
-                </select>
-              </div>
+              <div class="checkbox-wrapper"><label><input type="checkbox" id="chkComplete"><span><i class="material-icons left">task_alt</i>처리 완료로 표시</span></label></div>
             </div>
           </div>
           
@@ -449,7 +357,7 @@
         </div>
 
         <div id="todoTab" class="col s12 main-card tab-content">
-          <div class="section-label"><i class="material-icons">playlist_add_check</i>나의 할 일 (To-Do List)<button class="btn-small indigo lighten-1 waves-effect right" onclick="loadTodoList(true)"><i class="material-icons left">refresh</i>새로고침</button></div>
+          <div class="section-label"><i class="material-icons">playlist_add_check</i>나의 할 일 (To-Do List)<button class="btn-small indigo lighten-1 waves-effect right" onclick="loadTodoList()"><i class="material-icons left">refresh</i>새로고침</button></div>
           <div id="todoLoader" class="progress indigo lighten-4"><div class="indeterminate indigo"></div></div>
           <div id="todoListArea" style="overflow-x:auto;"></div>
         </div>
@@ -496,49 +404,18 @@
           </div>
           <div class="row" style="margin-top:40px;"><div class="col s12"><h6 class="center" style="font-weight:700; color:#546e7a;">📅 월별 CS 발생 추이</h6><div style="height:300px;"><canvas id="chartTrend"></canvas></div></div></div>
         </div>
-
-        <div id="devTab" class="col s12 main-card tab-content">
-          <div class="section-label"><i class="material-icons">developer_board</i>개발 진행 현황<button class="btn-small indigo lighten-1 waves-effect right" onclick="loadDevStatus(true)"><i class="material-icons left">refresh</i>새로고침</button></div>
-          <div class="filter-container">
-            <div class="filter-item"><label class="custom-label">시작일</label><input id="devStart" type="date"></div>
-            <div class="filter-item"><label class="custom-label">종료일</label><input id="devEnd" type="date"></div>
-            <div class="filter-actions">
-              <button class="btn indigo darken-1 waves-effect filter-btn" onclick="loadDevStatus()">조회</button>
-            </div>
-          </div>
-          <div id="devStatSummary" style="display:none; margin-bottom:24px;">
-            <div style="display:flex; gap:12px; flex-wrap:wrap;">
-              <div class="dev-stat-box" id="devCardTotal" onclick="filterDevTable('')" style="cursor:pointer; flex:1; min-width:120px;">
-                <div class="dsb-val" id="devCntTotal" style="color:#3f51b5;">-</div>
-                <div class="dsb-label">전체</div>
-              </div>
-              <div class="dev-stat-box" id="devCardDiscuss" onclick="filterDevTable('논의필요')" style="cursor:pointer; flex:1; min-width:120px;">
-                <div class="dsb-val" id="devCntDiscuss" style="color:#f57f17;">-</div>
-                <div class="dsb-label">💬 논의필요</div>
-              </div>
-              <div class="dev-stat-box" id="devCardConfirm" onclick="filterDevTable('진행확정')" style="cursor:pointer; flex:1; min-width:120px;">
-                <div class="dsb-val" id="devCntConfirm" style="color:#2e7d32;">-</div>
-                <div class="dsb-label">✅ 진행확정</div>
-              </div>
-              <div class="dev-stat-box" id="devCardReject" onclick="filterDevTable('진행불가')" style="cursor:pointer; flex:1; min-width:120px;">
-                <div class="dsb-val" id="devCntReject" style="color:#c62828;">-</div>
-                <div class="dsb-label">❌ 진행불가</div>
-              </div>
-            </div>
-            <div id="devActiveFilter" style="margin-top:10px; font-size:0.85rem; color:#757575; min-height:20px;"></div>
-          </div>
-          <div id="devLoader" class="progress indigo lighten-4" style="display:none;"><div class="indeterminate indigo"></div></div>
-          <div id="devResultArea" style="overflow-x:auto;"><p class="center grey-text" style="padding:50px;">조건을 입력하고 조회를 눌러주세요.</p></div>
-        </div>
-
       </div>
     </div>
-
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
     <script>
       var codeData = { products: [], mapProductToCat1: [], mapCat1ToCat2: [] };
-      var GAS_URL = "https://script.google.com/macros/s/AKfycbxjRMFXgcQx9xrU8IRR28XIhdP-ipgge5oqhbWwaQqbDCKCY72L61R0bhXTFZaICtjh/exec";
+      var GAS_URL = "https://script.google.com/macros/s/AKfycbyXHZsEjcie59UT9T_wqRLCSBw-E7Zm0Air8EziTJbi0-XeNWKj3Mg0vwnqvGAGyzOC/exec";
+      // 작은따옴표 등 onclick 속성을 깨는 문자를 안전하게 인코딩
+      function safeRowStr(r) {
+        return encodeURIComponent(JSON.stringify(r)).replace(/'/g, '%27');
+      }
+
       function gasCall(action, payload, onSuccess, onFailure) {
         // CORS 우회: JSONP 방식 (GET 요청은 CORS 제한 없음)
         var cbName = 'cb_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
@@ -548,7 +425,7 @@
           document.body.removeChild(script);
           var err = new Error('요청 시간 초과');
           if (onFailure) onFailure(err); else alert("오류: " + err.message);
-        }, 55000); // ✅ AI 응답 대기 시간 30초 → 55초 (Gemini 처리 시간 고려)
+        }, 30000);
 
         window[cbName] = function(res) {
           clearTimeout(timer);
@@ -571,7 +448,6 @@
       var currentTargetId = null;
       var currentCaptionId = null;
       var accumulatedFinal = '';      // ✅ 세션 내 누적 final 버퍼
-      var lastInterim = '';           // ✅ 세션 끊기기 직전 interim 보존 (누락 방지)
       var restartDebounce = null;     // ✅ 재시작 딜레이용 타이머
       var previousTab = 'searchTab'; 
 
@@ -605,20 +481,7 @@
         document.getElementById('searchEnd').value = today;
         document.getElementById('statStart').value = today.substring(0, 4) + "-01-01";
         document.getElementById('statEnd').value = today;
-        document.getElementById('devStart').value = today.substring(0, 4) + "-01-01";
-        document.getElementById('devEnd').value = today;
-        // ✅ getInitialData 캐싱 (1시간)
-        var _cached = localStorage.getItem('csInitData');
-        var _cachedAt = parseInt(localStorage.getItem('csInitDataAt') || '0');
-        if (_cached && (Date.now() - _cachedAt < 60 * 60 * 1000)) {
-          initData(JSON.parse(_cached));
-        } else {
-          gasCall("getInitialData", null, function(data) {
-            localStorage.setItem('csInitData', JSON.stringify(data));
-            localStorage.setItem('csInitDataAt', Date.now().toString());
-            initData(data);
-          });
-        }
+        gasCall("getInitialData", null, initData);
         
         if ('webkitSpeechRecognition' in window) {
           recognition = new webkitSpeechRecognition();
@@ -642,15 +505,12 @@
 
             if (currentTargetId) {
               if (newFinal.trim().length > 0) {
-                lastInterim = '';  // ✅ 확정 결과가 오면 임시 버퍼 초기화
                 accumulatedFinal += (accumulatedFinal ? ' ' : '') + newFinal.trim();
                 var target = document.getElementById(currentTargetId);
                 // ✅ 텍스트박스에는 이 세션의 누적 내용 전체를 반영
                 var baseValue = target.dataset.baseValue || '';
                 target.value = baseValue + (baseValue && accumulatedFinal ? ' ' : '') + accumulatedFinal;
                 target.scrollTop = target.scrollHeight;
-              } else {
-                lastInterim = interimTranscript;  // ✅ 미확정 내용 보존 (세션 끊김 시 복구용)
               }
               if (currentCaptionId) {
                 var caption = document.getElementById(currentCaptionId);
@@ -666,8 +526,7 @@
           };
 
           recognition.onerror = function(event) { 
-            if (event.error === 'no-speech') return; // ✅ no-speech는 무시 (자동 재시작으로 처리)
-            if (event.error === 'aborted') return;   // ✅ aborted도 무시 (onend에서 재시작 처리)
+            if (event.error === 'aborted' || event.error === 'no-speech') return; // ✅ no-speech는 무시 (자동 재시작으로 처리)
             if (event.error === 'not-allowed') {
               alert("마이크 권한이 차단되었습니다.\n\n1. 브라우저 설정에서 마이크를 허용해주세요.\n2. 앱스 스크립트 편집기 내부가 아닌, 정식 링크(새 탭)에서 실행해주세요.");
               stopVoiceUI();
@@ -680,22 +539,13 @@
               stopVoiceUI(); 
             } else {
               if (currentTargetId) {
-                // ✅ 세션 끊기기 직전 interim 내용이 있으면 누적에 추가 (이어 말하기 누락 방지)
-                if (lastInterim.trim().length > 2) {
-                  accumulatedFinal += (accumulatedFinal ? ' ' : '') + lastInterim.trim();
-                  lastInterim = '';
-                  var target = document.getElementById(currentTargetId);
-                  var baseValue = target.dataset.baseValue || '';
-                  target.value = baseValue + (baseValue && accumulatedFinal ? ' ' : '') + accumulatedFinal;
-                  target.scrollTop = target.scrollHeight;
-                }
-                // ✅ 150ms → 300ms 딜레이: 브라우저 내부 버퍼 안정화 + 전화기 마이크 끊김 대응
+                // ✅ 즉시 재시작 대신 150ms 딜레이 → 브라우저 내부 버퍼 안정화
                 clearTimeout(restartDebounce);
                 restartDebounce = setTimeout(function() {
                   if (currentTargetId && !isManualStop) {
                     try { recognition.start(); } catch(e) {}
                   }
-                }, 300);
+                }, 150);
               } else {
                 stopVoiceUI();
               }
@@ -710,7 +560,6 @@
       function startVoice(targetId, captionId, btnElement) { 
           isManualStop = false;
           accumulatedFinal = '';    // ✅ 새 세션 시작 시 누적 버퍼 초기화
-          lastInterim = '';         // ✅ interim 버퍼도 초기화
           currentTargetId = targetId; 
           currentCaptionId = captionId;
           // ✅ 현재 텍스트박스 기존 값 저장 (새로 인식된 내용을 덧붙이기 위함)
@@ -736,32 +585,10 @@
       function fuzzySelect(selectId, targetText) { if (!targetText || targetText.trim() === "" || targetText.includes("알수없음")) return false; var sel = document.getElementById(selectId); if (!sel) return false; var t = targetText.toLowerCase().replace(/\s/g, ''); for (var i = 0; i < sel.options.length; i++) { var optVal = sel.options[i].value.toLowerCase().replace(/\s/g, ''); if (optVal && (optVal.includes(t) || t.includes(optVal))) { sel.selectedIndex = i; return true; } } return false; }
       function cleanText(str) { return str ? str.replace(/\*\*/g, '').trim() : ""; }
       
-      function parseAndFillAiResult(text) {
-        // ✅ 정규식 개선: \n\n[ 처럼 빈줄이 있어도 정확히 섹션 구분되도록 수정
-        var summaryMatch  = text.match(/\[요약\]\s*([\s\S]*?)\s*(?=\n*\[|$)/);
-        var questionMatch = text.match(/\[질문\]\s*([\s\S]*?)\s*(?=\n*\[|$)/);
-        var answerMatch   = text.match(/\[답변\]\s*([\s\S]*?)\s*(?=\n*\[분류\]|$)/);
-        var deptMatch  = text.match(/분과:\s*(.*)/);
-        var prodMatch  = text.match(/제품:\s*(.*)/);
-        var typeMatch  = text.match(/구분:\s*(.*)/);
-        var cat1Match  = text.match(/분류1:\s*(.*)/);
-        var cat2Match  = text.match(/분류2:\s*(.*)/);
-
-        // ✅ 각 필드 값 적용 전 항상 초기화 (이전 분석 내용이 남아있는 경우 방지)
-        var summaryEl  = document.getElementById('inSummary');
-        var questionEl = document.getElementById('inQuestion');
-        var answerEl   = document.getElementById('inAnswer');
-
-        summaryEl.value  = summaryMatch  ? cleanText(summaryMatch[1])  : '';
-        questionEl.value = questionMatch ? cleanText(questionMatch[1]) : '';
-        answerEl.value   = answerMatch   ? cleanText(answerMatch[1])   : '';
-
-        // ✅ 값 변경 후 높이 재조정
-        [summaryEl, questionEl, answerEl].forEach(function(el) {
-          el.style.height = '';
-          M.textareaAutoResize(el);
-        });
-
+      function parseAndFillAiResult(text) { 
+        var summaryMatch = text.match(/\[요약\]\s*([\s\S]*?)(?=\n\[|$)/); var questionMatch = text.match(/\[질문\]\s*([\s\S]*?)(?=\n\[|$)/); var answerMatch = text.match(/\[답변\]\s*([\s\S]*?)(?=\n\[|$)/); var deptMatch = text.match(/분과:\s*(.*)/); var prodMatch = text.match(/제품:\s*(.*)/); var typeMatch = text.match(/구분:\s*(.*)/); var cat1Match = text.match(/분류1:\s*(.*)/); var cat2Match = text.match(/분류2:\s*(.*)/);
+        if(summaryMatch) document.getElementById('inSummary').value = cleanText(summaryMatch[1]); if(questionMatch) document.getElementById('inQuestion').value = cleanText(questionMatch[1]); if(answerMatch) document.getElementById('inAnswer').value = cleanText(answerMatch[1]); 
+        M.textareaAutoResize(document.getElementById('inSummary')); M.textareaAutoResize(document.getElementById('inQuestion')); M.textareaAutoResize(document.getElementById('inAnswer')); 
         if(deptMatch) fuzzySelect('inDept', cleanText(deptMatch[1]));
         if(prodMatch) { if(fuzzySelect('inProduct', cleanText(prodMatch[1]))) { updateCat1(); if(cat1Match && fuzzySelect('inCat1', cleanText(cat1Match[1]))) { updateCat2(); if(cat2Match) fuzzySelect('inCat2', cleanText(cat2Match[1])); } } }
         if(typeMatch) fuzzySelect('inType', cleanText(typeMatch[1]));
@@ -769,7 +596,7 @@
 
       function resetEntryFormConfirm() { if(confirm("입력된 내용을 모두 지우시겠습니까?")) { cancelEditMode(); } }
       function initAndSwitchToEntry(tabElement) { cancelEditMode(); switchTab('entryTab', tabElement); }
-      function switchTab(tabId, element, isStats, isTodo, isDev) { var contents = document.querySelectorAll('.tab-content'); contents.forEach(function(el) { el.classList.remove('active'); }); document.getElementById(tabId).classList.add('active'); var tabs = document.querySelectorAll('.custom-tab'); tabs.forEach(function(el) { el.classList.remove('active'); }); element.classList.add('active'); if(isStats) loadStats(); if(isTodo) loadTodoList(); if(isDev) loadDevStatus(); }
+      function switchTab(tabId, element, isStats, isTodo) { var contents = document.querySelectorAll('.tab-content'); contents.forEach(function(el) { el.classList.remove('active'); }); document.getElementById(tabId).classList.add('active'); var tabs = document.querySelectorAll('.custom-tab'); tabs.forEach(function(el) { el.classList.remove('active'); }); element.classList.add('active'); if(isStats) loadStats(); if(isTodo) loadTodoList(); }
       
       function generateFaq(event, rowStr, btnElement) {
         event.stopPropagation(); 
@@ -783,16 +610,14 @@
         }, function(err){ btnElement.innerText = originalText; btnElement.disabled = false; alert("오류: " + err.message); });
       }
 
-      function loadTodoList(force) { 
-        if (!force && _todoLoaded) return;
+      function loadTodoList() { 
         var div = document.getElementById('todoListArea'); document.getElementById('todoLoader').style.display = 'block'; 
         gasCall("getMyTodoList", currentUser, function(data){ 
           document.getElementById('todoLoader').style.display = 'none'; 
           if(!data || data.length===0) { div.innerHTML='<div class="center" style="padding:50px;"><i class="material-icons large grey-text text-lighten-2">task_alt</i><br><h5 class="grey-text">할 일이 없습니다. 완벽해요!</h5></div>'; return; } 
           var html = '<table class="log-table"><thead><tr><th style="width:80px; text-align:center;">경과</th><th>병원/날짜</th><th>내용 (질문/답변)</th><th style="width: 140px; min-width:140px;">발신자/번호</th><th style="width: 80px; text-align: center;">상태</th></tr></thead><tbody>'; 
-          _todoLoaded = true;
           data.forEach(r => { 
-            var rowStr = encodeURIComponent(JSON.stringify(r)); 
+            var rowStr = safeRowStr(r); 
             var dDayStyle = "background:#e0e0e0; color:#616161;"; var dayNum = parseInt(r.dTag.replace("D+","")) || 0; 
             if(dayNum >= 7) dDayStyle = "background:#ffebee; color:#c62828;"; else if(dayNum >= 3) dDayStyle = "background:#fff3e0; color:#ef6c00;"; else if(r.dTag === "오늘") dDayStyle = "background:#e3f2fd; color:#1565c0;"; 
             var stClass = r.status.includes('임시') ? 'status-temp' : 'status-ing'; 
@@ -801,20 +626,15 @@
         }); 
       }
       
-      var _searchBtn = null;
       function searchLogs() { 
         var s = document.getElementById('searchStart').value; var e = document.getElementById('searchEnd').value; var ing = document.getElementById('searchOnlyIng').checked; var hosp = document.getElementById('searchHospital').value; var caller = document.getElementById('searchCaller').value; var recv = document.getElementById('searchReceiver').value; 
-        // ✅ 중복 요청 방지 - 버튼 비활성화
-        _searchBtn = document.querySelector('#searchTab .filter-btn');
-        if (_searchBtn) { _searchBtn.disabled = true; _searchBtn.innerText = '조회 중...'; }
         var div = document.getElementById('searchResultArea'); div.innerHTML='<div class="progress"><div class="indeterminate"></div></div>'; 
         gasCall("searchCsLogs", {startDate: s, endDate: e, onlyIng: ing, hospital: hosp, caller: caller, receiver: recv}, function(data){ 
-          if (_searchBtn) { _searchBtn.disabled = false; _searchBtn.innerText = '조회'; }
           if(!data || data.length===0) { div.innerHTML='<p class="center grey-text">결과 없음</p>'; return; } 
           var html = '<table class="log-table"><thead><tr><th>병원/날짜</th><th>내용/답변</th><th style="width: 140px; min-width:140px;">발신자/번호</th><th style="width: 80px; text-align: center;">상태</th><th style="width: 100px; text-align: center;">동작</th></tr></thead><tbody>'; 
           data.forEach(r => { 
             var stClass = r.status.includes('완료') ? 'status-done' : (r.status.includes('임시') ? 'status-temp' : 'status-ing'); 
-            var rowStr = encodeURIComponent(JSON.stringify(r)); 
+            var rowStr = safeRowStr(r); 
             var safeCaller = String(r.caller || "");
             var dispCaller = safeCaller.trim() !== "" ? r.caller : '<span class="grey-text">미기재</span>'; 
             var safeCallback = String(r.callback || "");
@@ -827,247 +647,18 @@
       function loadToEdit(rowStr, sourceTab) { 
         var row = JSON.parse(decodeURIComponent(rowStr)); isEditMode = true; previousTab = sourceTab || 'searchTab'; 
         document.getElementById('editIndex').value = row.index; document.getElementById('dispIndex').innerText = row.index; document.getElementById('editModeBar').style.display = 'block'; 
-        var btn = document.getElementById('btnSave');
-        // ✅ 아이콘 유지하면서 텍스트 노드만 교체
-        var tNode = Array.from(btn.childNodes).find(function(n){ return n.nodeType === Node.TEXT_NODE && n.textContent.trim(); });
-        if(tNode) tNode.textContent = ' 수정사항 저장';
-        btn.classList.add('btn-update'); 
+        var btn = document.getElementById('btnSave'); btn.innerText = '수정사항 저장'; btn.classList.add('btn-update'); 
         switchTab('entryTab', document.querySelector('.custom-tab.active')); var tabs = document.querySelectorAll('.custom-tab'); tabs.forEach(t => t.classList.remove('active')); tabs[0].classList.add('active'); 
-        document.getElementById('inDate').value = row.date; document.getElementById('inHospital').value = row.hospital; document.getElementById('inDept').value = row.dept; document.getElementById('inCaller').value = row.caller; document.getElementById('inCallback').value = row.callback ? row.callback : ''; document.getElementById('inDuration').value = row.duration ? row.duration : ''; document.getElementById('inProduct').value = row.product; document.getElementById('inType').value = row.type; document.getElementById('inQuestion').value = row.content; document.getElementById('inAnswer').value = row.answer; document.getElementById('inSummary').value = ""; document.getElementById('inDevStatus').value = row.devStatus || ''; document.getElementById('chkComplete').checked = (row.status === '완료'); document.getElementById('inContent').value = row.rawContent ? row.rawContent : ""; 
+        document.getElementById('inDate').value = row.date; document.getElementById('inHospital').value = row.hospital; document.getElementById('inDept').value = row.dept; document.getElementById('inCaller').value = row.caller; document.getElementById('inCallback').value = row.callback ? row.callback : ''; document.getElementById('inDuration').value = row.duration ? row.duration : ''; document.getElementById('inProduct').value = row.product; document.getElementById('inType').value = row.type; document.getElementById('inQuestion').value = row.content; document.getElementById('inAnswer').value = row.answer; document.getElementById('inSummary').value = ""; document.getElementById('chkComplete').checked = (row.status === '완료'); document.getElementById('inContent').value = row.rawContent ? row.rawContent : ""; 
         updateCat1(row.cat1); setTimeout(() => updateCat2(row.cat2), 100); setTimeout(function() { M.textareaAutoResize(document.getElementById('inQuestion')); M.textareaAutoResize(document.getElementById('inAnswer')); M.textareaAutoResize(document.getElementById('inContent')); }, 100);
         var qsModal = M.Modal.getInstance(document.getElementById('modal-quick-search'));
         if(qsModal) qsModal.close();
       }
       
       function goBackToList() { cancelEditMode(); var tabs = document.querySelectorAll('.custom-tab'); if (previousTab === 'todoTab') { switchTab('todoTab', tabs[1], false, true); } else { switchTab('searchTab', tabs[2]); searchLogs(); } } 
-      function cancelEditMode() { isEditMode = false; document.getElementById('editModeBar').style.display = 'none'; var btn = document.getElementById('btnSave');
-  var tNode2 = Array.from(btn.childNodes).find(function(n){ return n.nodeType === Node.TEXT_NODE && n.textContent.trim(); });
-  if(tNode2) tNode2.textContent = 'DB에 저장하기';
-  btn.classList.remove('btn-update'); document.getElementById('editIndex').value = ''; resetEntryForm(); }
-      function deleteData() { var index = document.getElementById('editIndex').value; if(!index) return; if(!confirm('정말 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.')) return; var btn = document.getElementById('btnSave'); btn.disabled = true; btn.innerText = "삭제 중..."; gasCall("deleteCsLog", index, function(res){ btn.disabled = false; btn.innerText = "DB에 저장하기"; if(res === "DELETED") { _todoLoaded = false; _devLoaded = false; alert("🗑️ 삭제되었습니다."); goBackToList(); } else { alert("오류: " + res); } }); }
-
-      // ✅ 전체 조회 데이터 캐시 (카드 클릭 필터링용)
-      var devAllData = [];
-      // ✅ 탭 캐싱
-      var _todoLoaded = false;
-      var _devLoaded  = false;
-
-      function loadDevStatus(force) {
-        var start  = document.getElementById('devStart').value;
-        var end    = document.getElementById('devEnd').value;
-        var loader = document.getElementById('devLoader');
-        var area   = document.getElementById('devResultArea');
-        var summary = document.getElementById('devStatSummary');
-
-        // ✅ 캐시 있으면 재사용 (새로고침 버튼은 force=true)
-        if (!force && _devLoaded && devAllData.length > 0) {
-          filterDevTable('');
-          return;
-        }
-
-        loader.style.display = 'block';
-        area.innerHTML = '';
-        summary.style.display = 'none';
-        devAllData = [];
-
-        gasCall('searchCsLogs', {startDate: start || '2000-01-01', endDate: end || '2099-12-31', onlyIng: false, hospital: '', caller: '', receiver: ''}, function(data) {
-          loader.style.display = 'none';
-
-          // devStatus 있는 항목만
-          devAllData = data.filter(function(r) { return r.devStatus && r.devStatus.trim() !== ''; });
-
-          if (devAllData.length === 0) {
-            area.innerHTML = '<p class="center grey-text" style="padding:50px;">개발 진행 현황으로 등록된 데이터가 없습니다.</p>';
-            return;
-          }
-
-          // 요약 카드 숫자 업데이트
-          document.getElementById('devCntTotal').innerText   = devAllData.length;
-          document.getElementById('devCntDiscuss').innerText = devAllData.filter(function(r){ return r.devStatus === '논의필요'; }).length;
-          document.getElementById('devCntConfirm').innerText = devAllData.filter(function(r){ return r.devStatus === '진행확정'; }).length;
-          document.getElementById('devCntReject').innerText  = devAllData.filter(function(r){ return r.devStatus === '진행불가'; }).length;
-          summary.style.display = 'block';
-          _devLoaded = true;
-
-          // 기본: 전체 출력 (카드 선택 초기화)
-          filterDevTable('');
-        }, function(err) {
-          loader.style.display = 'none';
-          area.innerHTML = '<p class="center red-text">오류: ' + err.message + '</p>';
-        });
-      }
-
-      function filterDevTable(status) {
-        var area = document.getElementById('devResultArea');
-
-        // 카드 활성화 표시
-        ['devCardTotal','devCardDiscuss','devCardConfirm','devCardReject'].forEach(function(id) {
-          document.getElementById(id).style.boxShadow = '';
-          document.getElementById(id).style.borderColor = '';
-        });
-        var activeLabel = '전체';
-        if (status === '') {
-          document.getElementById('devCardTotal').style.boxShadow = '0 0 0 2px #3f51b5';
-        } else if (status === '논의필요') {
-          document.getElementById('devCardDiscuss').style.boxShadow = '0 0 0 2px #f57f17';
-          activeLabel = '💬 논의필요';
-        } else if (status === '진행확정') {
-          document.getElementById('devCardConfirm').style.boxShadow = '0 0 0 2px #2e7d32';
-          activeLabel = '✅ 진행확정';
-        } else if (status === '진행불가') {
-          document.getElementById('devCardReject').style.boxShadow = '0 0 0 2px #c62828';
-          activeLabel = '❌ 진행불가';
-        }
-        var filterLabel = document.getElementById('devActiveFilter');
-        if(filterLabel) filterLabel.innerHTML = status ? '현재 필터: <b>' + activeLabel + '</b>' : '';
-
-        // 데이터 필터링
-        var filtered = status ? devAllData.filter(function(r){ return r.devStatus === status; }) : devAllData;
-
-        if (filtered.length === 0) {
-          area.innerHTML = '<p class="center grey-text" style="padding:30px;">' + activeLabel + ' 항목이 없습니다.</p>';
-          return;
-        }
-
-        // 테이블 렌더링
-        var html = '<table class="log-table"><thead><tr>' +
-          '<th>병원 / 날짜</th>' +
-          '<th>제품 / 분류</th>' +
-          '<th>질문 / 답변</th>' +
-          '<th style="width:110px; text-align:center;">개발현황<br><small style=\"font-weight:400; color:#aaa;\">클릭하여 변경</small></th>' +
-          '</tr></thead><tbody>';
-
-        filtered.forEach(function(r) {
-          var devCls   = 'dev-' + (r.devStatus || 'none');
-          var devLabel = r.devStatus || '-';
-          var rowStr   = encodeURIComponent(JSON.stringify(r));
-          html += '<tr>' +
-            '<td onclick="loadToEdit(&quot;' + rowStr + '&quot;, &quot;devTab&quot;)"><b>' + r.hospital + '</b><br><small class="grey-text">' + r.date + '</small></td>' +
-            '<td onclick="loadToEdit(&quot;' + rowStr + '&quot;, &quot;devTab&quot;)"><b>' + (r.product||'-') + '</b><br><small class="grey-text">' + (r.cat1||'') + (r.cat2 ? ' &gt; '+r.cat2 : '') + '</small></td>' +
-            '<td onclick="loadToEdit(&quot;' + rowStr + '&quot;, &quot;devTab&quot;)"><div style="font-weight:500; margin-bottom:3px;">Q. ' + (r.content||'') + '</div>' +
-            '<div style="color:#558b2f; font-size:0.85rem;">A. ' + (r.answer||'') + '</div>' +
-            '<small class="grey-text">' + (r.receiver||'') + '</small></td>' +
-            '<td style="text-align:center;">' +
-              '<div class="dev-inline-select-wrap">' +
-                '<span class="dev-badge ' + devCls + ' clickable" ' +
-                  'onclick="toggleDevMenu(event, this, ' + r.index + ', &quot;' + (r.devStatus||'') + '&quot;)">' +
-                  devLabel +
-                '</span>' +
-              '</div>' +
-            '</td>' +
-            '</tr>';
-        });
-        html += '</tbody></table>';
-        area.innerHTML = html;
-
-
-      }
-
-      var _devPopupIndex = null;
-      var _devPopupBadge = null;
-      var _devPopupStatus = '';
-
-      function closeDevPopup() {
-        document.getElementById('devEditPopup').style.display = 'none';
-        document.getElementById('devEditPopupBackdrop').style.display = 'none';
-        _devPopupIndex = null; _devPopupBadge = null; _devPopupStatus = '';
-      }
-
-      function toggleDevMenu(event, badgeEl, rowIndex, currentStatus) {
-        event.stopPropagation();
-        var popup = document.getElementById('devEditPopup');
-        // 같은 배지 재클릭 시 닫기
-        if (popup.style.display !== 'none' && _devPopupIndex === rowIndex) {
-          closeDevPopup(); return;
-        }
-        _devPopupIndex = rowIndex;
-        _devPopupBadge = badgeEl;
-        _devPopupStatus = currentStatus;
-
-        // active-opt 표시
-        popup.querySelectorAll('button').forEach(function(b){
-          b.classList.remove('active-opt');
-          var v = b.getAttribute('onclick') && b.getAttribute('onclick').includes(currentStatus) ? currentStatus : '';
-        });
-        // 현재 상태 버튼 강조
-        popup.querySelectorAll('button').forEach(function(b){
-          var txt = b.textContent.trim();
-          var map = {'💬 논의필요':'논의필요','✅ 진행확정':'진행확정','❌ 진행불가':'진행불가'};
-          if (map[txt] === currentStatus) b.classList.add('active-opt');
-          else b.classList.remove('active-opt');
-        });
-
-        // 팝업 위치: 배지 기준
-        var rect = badgeEl.getBoundingClientRect();
-        var pw = 184;
-        var left = rect.left + rect.width / 2 - pw / 2;
-        var top  = rect.bottom + 6;
-        // 화면 벗어남 방지
-        if (left + pw > window.innerWidth - 8) left = window.innerWidth - pw - 8;
-        if (left < 8) left = 8;
-        if (top + 180 > window.innerHeight) top = rect.top - 180;
-
-        popup.style.left  = left + 'px';
-        popup.style.top   = top  + 'px';
-        popup.style.width = pw   + 'px';
-        popup.style.display = 'block';
-        document.getElementById('devEditPopupBackdrop').style.display = 'block';
-      }
-
-      function selectDevOption(newStatus) {
-        if (_devPopupBadge === null) return;
-        // closeDevPopup() 호출 전에 참조 먼저 저장 (close 시 null로 초기화되기 때문)
-        var savedBadge = _devPopupBadge;
-        var savedIndex = _devPopupIndex;
-        closeDevPopup();
-        updateDevStatus(savedIndex, newStatus, savedBadge);
-      }
-
-      function closeAllDevMenus() {}  // 호환성 유지용 빈 함수
-
-      function updateDevStatus(rowIndex, newStatus, badgeEl) {
-        badgeEl.classList.add('dev-saving');
-        // devAllData에서 해당 row 찾아 전체 form 구성
-        var row = devAllData.find(function(r){ return r.index == rowIndex; });
-        if (!row) { badgeEl.classList.remove('dev-saving'); return; }
-        var form = {
-          index: row.index, date: row.date, hospital: row.hospital, dept: row.dept || '',
-          caller: row.caller || '', callback: row.callback || '', duration: row.duration || '',
-          product: row.product || '', callType: row.type || '', category1: row.cat1 || '',
-          category2: row.cat2 || '', content: row.content || '', answer: row.answer || '',
-          status: row.status, receiver: row.receiver || '', rawContent: row.rawContent || '',
-          devStatus: newStatus
-        };
-        gasCall('updateCsLog', form, function(res) {
-          if (res === 'UPDATED') {
-            // devAllData 캐시 업데이트
-            row.devStatus = newStatus;
-            // 배지 UI 즉시 갱신
-            var devCls = 'dev-' + (newStatus || 'none');
-            badgeEl.className = 'dev-badge ' + devCls + ' clickable';
-            badgeEl.textContent = newStatus || '-';
-            // onclick 업데이트 (새 상태 반영) - setAttribute 대신 직접 함수 교체 (&quot; 파싱 오류 방지)
-            badgeEl.onclick = (function(idx, status) {
-              return function(e) { toggleDevMenu(e, badgeEl, idx, status); };
-            })(rowIndex, newStatus);
-            badgeEl.classList.remove('dev-saving');
-            // 카운트 카드 갱신
-            document.getElementById('devCntTotal').innerText   = devAllData.length;
-            document.getElementById('devCntDiscuss').innerText = devAllData.filter(function(r){ return r.devStatus === '논의필요'; }).length;
-            document.getElementById('devCntConfirm').innerText = devAllData.filter(function(r){ return r.devStatus === '진행확정'; }).length;
-            document.getElementById('devCntReject').innerText  = devAllData.filter(function(r){ return r.devStatus === '진행불가'; }).length;
-            M.toast({html: '✅ 개발현황이 변경되었습니다.', classes: 'rounded'});
-          } else {
-            badgeEl.classList.remove('dev-saving');
-            alert('저장 오류: ' + res);
-          }
-        }, function(err) {
-          badgeEl.classList.remove('dev-saving');
-          alert('오류: ' + err.message);
-        });
-      }
-
-            function loadStats() { var start = document.getElementById('statStart').value; var end = document.getElementById('statEnd').value; var hosp = document.getElementById('statHospital').value; var caller = document.getElementById('statCaller').value; var recv = document.getElementById('statReceiver').value; document.getElementById('statLoader').style.display = 'block'; gasCall("getDashboardStats", {startDate: start, endDate: end, hospital: hosp, caller: caller, receiver: recv}, function(stats){ document.getElementById('statLoader').style.display = 'none'; document.getElementById('statTotalCount').innerText = stats.total.toLocaleString() + "건"; document.getElementById('statProcessRate').innerText = stats.rate + "%"; renderChart('chartHospital', 'bar', { labels: stats.topHospitals.map(x => x.label), datasets: [{ label: '문의 건수', data: stats.topHospitals.map(x => x.data), backgroundColor: 'rgba(63, 81, 181, 0.7)', borderColor: 'rgba(63, 81, 181, 1)', borderWidth: 1 }] }, { indexAxis: 'y' }); renderChart('chartCallerGraph', 'bar', { labels: stats.topCallers.map(x => x.label), datasets: [{ label: '문의 건수', data: stats.topCallers.map(x => x.data), backgroundColor: 'rgba(0, 150, 136, 0.7)', borderColor: 'rgba(0, 150, 136, 1)', borderWidth: 1 }] }, { indexAxis: 'y' }); renderChart('chartCategory', 'doughnut', { labels: stats.topCategories.map(x => x.label), datasets: [{ data: stats.topCategories.map(x => x.data), backgroundColor: ['#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3'] }] }); renderChart('chartTrend', 'line', { labels: stats.monthlyTrend.map(x => x.label), datasets: [{ label: '월별 발생 건수', data: stats.monthlyTrend.map(x => x.data), borderColor: '#ff9800', backgroundColor: 'rgba(255, 152, 0, 0.1)', fill: true, tension: 0.3 }] }); }); }
+      function cancelEditMode() { isEditMode = false; document.getElementById('editModeBar').style.display = 'none'; var btn = document.getElementById('btnSave'); btn.innerText = 'DB에 저장하기'; btn.classList.remove('btn-update'); document.getElementById('editIndex').value = ''; resetEntryForm(); }
+      function deleteData() { var index = document.getElementById('editIndex').value; if(!index) return; if(!confirm('정말 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.')) return; var btn = document.getElementById('btnSave'); btn.disabled = true; btn.innerText = "삭제 중..."; gasCall("deleteCsLog", index, function(res){ btn.disabled = false; btn.innerText = "DB에 저장하기"; if(res === "DELETED") { alert("🗑️ 삭제되었습니다."); goBackToList(); } else { alert("오류: " + res); } }); }
+      function loadStats() { var start = document.getElementById('statStart').value; var end = document.getElementById('statEnd').value; var hosp = document.getElementById('statHospital').value; var caller = document.getElementById('statCaller').value; var recv = document.getElementById('statReceiver').value; document.getElementById('statLoader').style.display = 'block'; gasCall("getDashboardStats", {startDate: start, endDate: end, hospital: hosp, caller: caller, receiver: recv}, function(stats){ document.getElementById('statLoader').style.display = 'none'; document.getElementById('statTotalCount').innerText = stats.total.toLocaleString() + "건"; document.getElementById('statProcessRate').innerText = stats.rate + "%"; renderChart('chartHospital', 'bar', { labels: stats.topHospitals.map(x => x.label), datasets: [{ label: '문의 건수', data: stats.topHospitals.map(x => x.data), backgroundColor: 'rgba(63, 81, 181, 0.7)', borderColor: 'rgba(63, 81, 181, 1)', borderWidth: 1 }] }, { indexAxis: 'y' }); renderChart('chartCallerGraph', 'bar', { labels: stats.topCallers.map(x => x.label), datasets: [{ label: '문의 건수', data: stats.topCallers.map(x => x.data), backgroundColor: 'rgba(0, 150, 136, 0.7)', borderColor: 'rgba(0, 150, 136, 1)', borderWidth: 1 }] }, { indexAxis: 'y' }); renderChart('chartCategory', 'doughnut', { labels: stats.topCategories.map(x => x.label), datasets: [{ data: stats.topCategories.map(x => x.data), backgroundColor: ['#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3'] }] }); renderChart('chartTrend', 'line', { labels: stats.monthlyTrend.map(x => x.label), datasets: [{ label: '월별 발생 건수', data: stats.monthlyTrend.map(x => x.data), borderColor: '#ff9800', backgroundColor: 'rgba(255, 152, 0, 0.1)', fill: true, tension: 0.3 }] }); }); }
       function renderChart(canvasId, type, data, extraOptions) { var ctx = document.getElementById(canvasId).getContext('2d'); if (canvasId === 'chartHospital' && chartHosp) chartHosp.destroy(); if (canvasId === 'chartCategory' && chartCat) chartCat.destroy(); if (canvasId === 'chartTrend' && chartTrend) chartTrend.destroy(); if (canvasId === 'chartCallerGraph' && chartCallerObj) chartCallerObj.destroy(); var config = { type: type, data: data, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: type !== 'bar', position: 'bottom' } }, ...extraOptions } }; var newChart = new Chart(ctx, config); if (canvasId === 'chartHospital') chartHosp = newChart; if (canvasId === 'chartCategory') chartCat = newChart; if (canvasId === 'chartTrend') chartTrend = newChart; if (canvasId === 'chartCallerGraph') chartCallerObj = newChart; }
       function checkUser() { var saved = localStorage.getItem("csUser"); if(saved) { currentUser = saved; document.getElementById('displayUser').innerText = saved + "님"; document.getElementById('setupOverlay').style.display = 'none'; } else document.getElementById('setupOverlay').style.display = 'flex'; }
       function saveUser() { var name = document.getElementById('setupName').value.trim(); if(!name) return alert('이름을 입력하세요'); localStorage.setItem("csUser", name); currentUser = name; document.getElementById('displayUser').innerText = name + "님"; document.getElementById('setupOverlay').style.display = 'none'; }
@@ -1090,22 +681,7 @@
             document.getElementById('setupOverlay').style.display = 'flex';
         } 
       } 
-      function initData(data) {
-        // ✅ 로딩 오버레이 제거
-        var overlay = document.getElementById('pageLoadOverlay');
-        if (overlay) { overlay.classList.add('hiding'); setTimeout(function(){ overlay.style.display='none'; }, 420); }
-        if(!data || data.error) return alert(data.error);
-        codeData = data;
-        var dataList = document.getElementById('hospital-list');
-        if (dataList && data.hospitals) { dataList.innerHTML = ''; data.hospitals.forEach(function(h) { var o = document.createElement('option'); o.value = h; dataList.appendChild(o); }); }
-        fillSelect('inDept', [...new Set(data.depts)]); fillSelect('inProduct', [...new Set(data.products)]); fillSelect('inType', [...new Set(data.types)]);
-        // ✅ code 시트 K열에서 개발현황 옵션 동적 로딩
-        if(data.devStatuses && data.devStatuses.length > 0) {
-          var ds = document.getElementById('inDevStatus');
-          ds.innerHTML = '<option value="">-미선택-</option>';
-          data.devStatuses.forEach(function(v){ var o = document.createElement('option'); o.value=v; o.text=v; ds.appendChild(o); });
-        }
-      }
+      function initData(data) { if(!data || data.error) return alert(data.error); codeData = data; var dataList = document.getElementById('hospital-list'); if (dataList && data.hospitals) { dataList.innerHTML = ''; data.hospitals.forEach(function(h) { var o = document.createElement('option'); o.value = h; dataList.appendChild(o); }); } fillSelect('inDept', [...new Set(data.depts)]); fillSelect('inProduct', [...new Set(data.products)]); fillSelect('inType', [...new Set(data.types)]); }
       function fillSelect(id, list, selVal) { var sel = document.getElementById(id); if(!sel) return; sel.innerHTML = '<option value="" disabled selected>선택</option>'; list.forEach(v => { var o = document.createElement('option'); o.value=v; o.text=v; if(selVal && v==selVal) o.selected=true; sel.appendChild(o); }); }
       function updateCat1(selVal) { var prod = document.getElementById('inProduct').value; var c1 = document.getElementById('inCat1'); var c2 = document.getElementById('inCat2'); if(!c1 || !c2) return; c1.innerHTML='<option value="" disabled selected>선택</option>'; c1.disabled=true; c2.innerHTML='<option value="" disabled selected>선택</option>'; c2.disabled=true; var filtered = codeData.mapProductToCat1.filter(x => x.key===prod); var list = [...new Set(filtered.map(x=>x.val))]; if(list.length>0) list.forEach(v=>{ var o=document.createElement('option'); o.value=v; o.text=v; if(selVal && v==selVal) o.selected=true; c1.appendChild(o); }); c1.disabled=false; }
       function updateCat2(selVal) { var c1Val = document.getElementById('inCat1').value; var c2 = document.getElementById('inCat2'); if(!c2) return; c2.innerHTML='<option value="" disabled selected>선택</option>'; c2.disabled=true; var filtered = codeData.mapCat1ToCat2.filter(x => x.key===c1Val); var list = [...new Set(filtered.map(x=>x.val))]; if(list.length>0) list.forEach(v=>{ var o=document.createElement('option'); o.value=v; o.text=v; if(selVal && v==selVal) o.selected=true; c2.appendChild(o); }); c2.disabled=false; }
@@ -1144,23 +720,16 @@
           answer: document.getElementById('inAnswer').value, 
           status: finalStatus, 
           receiver: currentUser, 
-          rawContent: rawContentText,
-          devStatus: document.getElementById('inDevStatus').value 
+          rawContent: rawContentText 
         }; 
         
-        var btn = document.getElementById('btnSave');
-        // ✅ 아이콘(<i>) 제외한 텍스트 노드만 변경 (innerText 복원 시 아이콘+줄바꿈 섞여 깨지는 문제 방지)
-        var btnTextNode = Array.from(btn.childNodes).find(function(n){ return n.nodeType === Node.TEXT_NODE && n.textContent.trim(); });
-        var orgTxt = btnTextNode ? btnTextNode.textContent : 'DB에 저장하기';
-        if(btnTextNode) btnTextNode.textContent = ' 처리 중...';
-        btn.disabled=true;
-        var btnT = document.getElementById('btnTempSave'); if(btnT) btnT.disabled=true;
+        var btn = document.getElementById('btnSave'); var orgTxt = btn.innerText; btn.disabled=true; btn.innerText='처리 중...'; 
+        gasCall(isEditMode ? "updateCsLog" : "saveCsLog", form, afterSave);
+        
         gasCall(isEditMode ? "updateCsLog" : "saveCsLog", form, afterSave);
         
         function afterSave(res) { 
-          btn.disabled=false;
-          var tNode = Array.from(btn.childNodes).find(function(n){ return n.nodeType === Node.TEXT_NODE && n.textContent.trim(); });
-          if(tNode) tNode.textContent = orgTxt;
+          btn.disabled=false; btn.innerText=orgTxt; 
           if(btnT) btnT.disabled=false;
           
           if(res==='SUCCESS' || res==='UPDATED') { 
@@ -1170,9 +739,7 @@
               closeTempModal();
               discardAndStartNew(); 
             } else {
-              // ✅ 저장/수정 후 탭 캐시 무효화 (다음 방문 시 최신 데이터 반영)
-            _todoLoaded = false; _devLoaded = false;
-            if(isEditMode) goBackToList(); else resetEntryForm(); 
+              if(isEditMode) goBackToList(); else resetEntryForm(); 
             }
           } else { alert('오류: '+res); } 
         } 
@@ -1181,12 +748,8 @@
       function resetEntryForm() { 
         document.getElementById('inHospital').value=''; document.getElementById('inCaller').value=''; document.getElementById('inCallback').value=''; 
         document.getElementById('inDuration').value=''; 
-        document.getElementById('inContent').value=''; document.getElementById('inSummary').value=''; document.getElementById('inQuestion').value=''; document.getElementById('inAnswer').value='';
-        // ✅ AI 분석으로 늘어난 textarea 높이 초기화 (style.height 리셋 후 autoResize 재적용)
-        ['inSummary','inQuestion','inAnswer','inContent'].forEach(function(id){
-          var el = document.getElementById(id); if(el){ el.style.height=''; M.textareaAutoResize(el); }
-        }); 
-        document.getElementById('chkComplete').checked=false; document.getElementById('inDevStatus').value=''; 
+        document.getElementById('inContent').value=''; document.getElementById('inSummary').value=''; document.getElementById('inQuestion').value=''; document.getElementById('inAnswer').value=''; 
+        document.getElementById('chkComplete').checked=false; 
         var now = new Date(); var offset = now.getTimezoneOffset() * 60000; var today = new Date(now.getTime() - offset).toISOString().substring(0, 10); 
         document.getElementById('inDate').value = today; document.getElementById('inDept').value = ""; document.getElementById('inProduct').value = ""; document.getElementById('inType').value = ""; 
         var c1 = document.getElementById('inCat1'); var c2 = document.getElementById('inCat2'); c1.innerHTML='<option value="" disabled selected>선택</option>'; c1.disabled=true; c2.innerHTML='<option value="" disabled selected>선택</option>'; c2.disabled=true; 
