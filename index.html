@@ -237,11 +237,16 @@
       </div>
     </div>
 
-    <!-- 전체 API 호출 로딩바 -->
-    <div id="gasLoader" style="display:none; position:fixed; top:0; left:0; width:100%; z-index:9999;">
-      <div class="progress" style="margin:0; border-radius:0;">
-        <div class="indeterminate indigo"></div>
+    <!-- 전체 화면 로딩 오버레이 -->
+    <div id="gasLoader" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:99999; background:rgba(255,255,255,0.75); justify-content:center; align-items:center; flex-direction:column;">
+      <div class="preloader-wrapper big active">
+        <div class="spinner-layer spinner-blue-only">
+          <div class="circle-clipper left"><div class="circle"></div></div>
+          <div class="gap-patch"><div class="circle"></div></div>
+          <div class="circle-clipper right"><div class="circle"></div></div>
+        </div>
       </div>
+      <p style="margin-top:20px; color:#3f51b5; font-weight:700; font-size:1.1rem;">불러오는 중...</p>
     </div>
 
     <div id="setupOverlay" style="display:none;">
@@ -427,7 +432,7 @@
       function _showGasLoader() {
         _gasLoadingCount++;
         var el = document.getElementById('gasLoader');
-        if (el) el.style.display = 'block';
+        if (el) el.style.display = 'flex';
       }
       function _hideGasLoader() {
         _gasLoadingCount = Math.max(0, _gasLoadingCount - 1);
