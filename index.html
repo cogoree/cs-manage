@@ -423,6 +423,20 @@
         return encodeURIComponent(JSON.stringify(r)).replace(/'/g, '%27');
       }
 
+      var _gasLoadingCount = 0;
+      function _showGasLoader() {
+        _gasLoadingCount++;
+        var el = document.getElementById('gasLoader');
+        if (el) el.style.display = 'block';
+      }
+      function _hideGasLoader() {
+        _gasLoadingCount = Math.max(0, _gasLoadingCount - 1);
+        if (_gasLoadingCount === 0) {
+          var el = document.getElementById('gasLoader');
+          if (el) el.style.display = 'none';
+        }
+      }
+
       function gasCall(action, payload, onSuccess, onFailure) {
         // CORS 우회: JSONP 방식 (GET 요청은 CORS 제한 없음)
         _showGasLoader();
