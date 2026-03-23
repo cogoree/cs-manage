@@ -286,7 +286,6 @@
             <li class="custom-tab" onclick="switchTab('todoTab', this, false, true)">To Do List</li>
             <li class="custom-tab" onclick="switchTab('searchTab', this)">이력 조회</li>
             <li class="custom-tab" onclick="switchTab('statsTab', this, true)">통계</li>
-            <li class="custom-tab" onclick="switchTab('devTab', this)">개발 현황</li>
           </ul>
         </div>
 
@@ -351,12 +350,9 @@
               <div class="checkbox-wrapper" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
                 <label><input type="checkbox" id="chkComplete"><span><i class="material-icons left">task_alt</i>처리 완료로 표시</span></label>
                 <div style="display:flex; align-items:center; gap:8px;">
-                  <span style="color:#6a1b9a; font-weight:700; font-size:0.9rem;"><i class="material-icons" style="font-size:1rem; vertical-align:middle; margin-right:3px;">code</i>개발 진행여부</span>
-                  <select id="inDevStatus" class="browser-default" style="width:140px; height:2.6rem; border-color:#ce93d8; background:#f3e5f5;">
+                  <span style="color:#e65100; font-weight:700; font-size:0.9rem;"><i class="material-icons" style="font-size:1rem; vertical-align:middle; margin-right:3px;">swap_horiz</i>인계자</span>
+                  <select id="inHandover" class="browser-default" style="width:140px; height:2.6rem; border-color:#ffcc80; background:#fff8e1;">
                     <option value="">-없음-</option>
-                    <option value="논의필요">🔵 논의필요</option>
-                    <option value="진행확정">🟢 진행확정</option>
-                    <option value="진행불가">🔴 진행불가</option>
                   </select>
                 </div>
               </div>
@@ -428,28 +424,6 @@
           </div>
           <div class="row" style="margin-top:40px;"><div class="col s12"><h6 class="center" style="font-weight:700; color:#546e7a;">📅 월별 CS 발생 추이</h6><div style="height:300px;"><canvas id="chartTrend"></canvas></div></div></div>
         </div>
-        <div id="devTab" class="col s12 main-card tab-content">
-          <div class="section-label"><i class="material-icons">developer_board</i>개발 현황</div>
-          <div class="filter-container">
-            <div class="filter-item"><label class="custom-label">시작일</label><input id="devStart" type="date"></div>
-            <div class="filter-item"><label class="custom-label">종료일</label><input id="devEnd" type="date"></div>
-            <div class="filter-item"><label class="custom-label">등록자</label><input id="devReceiver" type="text" placeholder="전체"></div>
-            <div class="filter-item">
-              <label class="custom-label">개발진행상태</label>
-              <select id="devStatusFilter" class="browser-default">
-                <option value="">전체</option>
-                <option value="논의필요">🔵 논의필요</option>
-                <option value="진행확정">🟢 진행확정</option>
-                <option value="진행불가">🔴 진행불가</option>
-              </select>
-            </div>
-            <div class="filter-actions">
-              <button class="btn indigo darken-1 waves-effect filter-btn" onclick="searchDevLogs()">조회</button>
-            </div>
-          </div>
-          <div id="devResultArea" style="overflow-x:auto;"><p class="center grey-text" style="padding:50px;">조건을 입력하고 조회를 눌러주세요.</p></div>
-        </div>
-
       </div>
     </div>
 
@@ -544,8 +518,6 @@
         document.getElementById('searchEnd').value = today;
         document.getElementById('statStart').value = today.substring(0, 4) + "-01-01";
         document.getElementById('statEnd').value = today;
-        document.getElementById('devStart').value = today.substring(0, 4) + "-01-01";
-        document.getElementById('devEnd').value = today;
         gasCall("getInitialData", null, initData);
         
         if ('webkitSpeechRecognition' in window) {
@@ -680,13 +652,13 @@
         gasCall("getMyTodoList", currentUser, function(data){ 
           document.getElementById('todoLoader').style.display = 'none'; 
           if(!data || data.length===0) { div.innerHTML='<div class="center" style="padding:50px;"><i class="material-icons large grey-text text-lighten-2">task_alt</i><br><h5 class="grey-text">할 일이 없습니다. 완벽해요!</h5></div>'; return; } 
-          var html = '<table class="log-table"><thead><tr><th style="width:80px; text-align:center;">경과</th><th>병원/날짜</th><th>내용 (질문/답변)</th><th style="width: 140px; min-width:140px;">발신자/번호</th><th style="width: 80px; text-align: center;">상태</th></tr></thead><tbody>'; 
+          var html = '<table class="log-table"><thead><tr><th style="width:80px; text-align:center;">경과</th><th>병원/날짜</th><th>내용 (질문/답변)</th><th style="width: 140px; min-width:140px;">발신자/번호</th><th style="width: 80px; text-align: center;">상태</th><th style="width:80px; text-align:center;">인계</th></tr></thead><tbody>'; 
           data.forEach(r => { 
             var rowStr = safeRowStr(r); 
             var dDayStyle = "background:#e0e0e0; color:#616161;"; var dayNum = parseInt(r.dTag.replace("D+","")) || 0; 
             if(dayNum >= 7) dDayStyle = "background:#ffebee; color:#c62828;"; else if(dayNum >= 3) dDayStyle = "background:#fff3e0; color:#ef6c00;"; else if(r.dTag === "오늘") dDayStyle = "background:#e3f2fd; color:#1565c0;"; 
             var stClass = r.status.includes('임시') ? 'status-temp' : 'status-ing'; 
-            html += `<tr onclick="loadToEdit('${rowStr}', 'todoTab')"><td class="center"><span class="d-day-badge" style="${dDayStyle}">${r.dTag}</span></td><td><b>${r.hospital}</b><br><small class="grey-text">${r.date}</small></td><td><div style="font-weight:500; margin-bottom:4px;">Q. ${r.content}</div><div style="color:#558b2f; font-size:0.85rem;">A. ${r.answer || '(답변 없음)'}</div><small class="grey-text">${r.product} / ${r.type}</small></td><td><span style="font-weight:bold;">${r.caller}</span><br><small class="grey-text">${r.callback || '-'}</small></td><td style="text-align:center;"><span class="status-badge ${stClass}">${r.status}</span></td></tr>`; 
+            var isHandover = r.handover && r.handover === currentUser && r.receiver !== currentUser; var rowLabel = isHandover ? '<span style="background:#fff3e0;color:#e65100;border:1px solid #ffcc80;border-radius:10px;padding:2px 7px;font-size:0.78rem;font-weight:700;">인계</span>' : ''; html += `<tr onclick="loadToEdit('${rowStr}', 'todoTab')"><td class="center"><span class="d-day-badge" style="${dDayStyle}">${r.dTag}</span></td><td><b>${r.hospital}</b><br><small class="grey-text">${r.date}</small></td><td><div style="font-weight:500; margin-bottom:4px;">Q. ${r.content}</div><div style="color:#558b2f; font-size:0.85rem;">A. ${r.answer || '(답변 없음)'}</div><small class="grey-text">${r.product} / ${r.type}</small></td><td><span style="font-weight:bold;">${r.caller}</span><br><small class="grey-text">${r.callback || '-'}</small></td><td style="text-align:center;"><span class="status-badge ${stClass}">${r.status}</span></td><td style="text-align:center;">${rowLabel}</td></tr>`; 
           }); html += '</tbody></table>'; div.innerHTML = html; 
         }); 
       }
@@ -714,13 +686,13 @@
         document.getElementById('editIndex').value = row.index; document.getElementById('dispIndex').innerText = row.index; document.getElementById('editModeBar').style.display = 'block'; 
         var btn = document.getElementById('btnSave'); btn.innerText = '수정사항 저장'; btn.classList.add('btn-update'); 
         switchTab('entryTab', document.querySelector('.custom-tab.active')); var tabs = document.querySelectorAll('.custom-tab'); tabs.forEach(t => t.classList.remove('active')); tabs[0].classList.add('active'); 
-        document.getElementById('inDate').value = row.date; document.getElementById('inHospital').value = row.hospital; document.getElementById('inDept').value = row.dept; document.getElementById('inCaller').value = row.caller; document.getElementById('inCallback').value = row.callback ? row.callback : ''; document.getElementById('inDuration').value = row.duration ? row.duration : ''; document.getElementById('inProduct').value = row.product; document.getElementById('inType').value = row.type; document.getElementById('inQuestion').value = row.content; document.getElementById('inAnswer').value = row.answer; document.getElementById('inSummary').value = ""; document.getElementById('chkComplete').checked = (row.status === '완료'); document.getElementById('inDevStatus').value = row.devStatus || ''; document.getElementById('inContent').value = row.rawContent ? row.rawContent : ""; 
+        document.getElementById('inDate').value = row.date; document.getElementById('inHospital').value = row.hospital; document.getElementById('inDept').value = row.dept; document.getElementById('inCaller').value = row.caller; document.getElementById('inCallback').value = row.callback ? row.callback : ''; document.getElementById('inDuration').value = row.duration ? row.duration : ''; document.getElementById('inProduct').value = row.product; document.getElementById('inType').value = row.type; document.getElementById('inQuestion').value = row.content; document.getElementById('inAnswer').value = row.answer; document.getElementById('inSummary').value = ""; document.getElementById('chkComplete').checked = (row.status === '완료'); document.getElementById('inHandover').value = row.handover || ''; document.getElementById('inContent').value = row.rawContent ? row.rawContent : ""; 
         updateCat1(row.cat1); setTimeout(() => updateCat2(row.cat2), 100); setTimeout(function() { M.textareaAutoResize(document.getElementById('inQuestion')); M.textareaAutoResize(document.getElementById('inAnswer')); M.textareaAutoResize(document.getElementById('inContent')); }, 100);
         var qsModal = M.Modal.getInstance(document.getElementById('modal-quick-search'));
         if(qsModal) qsModal.close();
       }
       
-      function goBackToList() { cancelEditMode(); var tabs = document.querySelectorAll('.custom-tab'); if (previousTab === 'todoTab') { switchTab('todoTab', tabs[1], false, true); } else if (previousTab === 'devTab') { switchTab('devTab', tabs[4]); searchDevLogs(); } else { switchTab('searchTab', tabs[2]); searchLogs(); } } 
+      function goBackToList() { cancelEditMode(); var tabs = document.querySelectorAll('.custom-tab'); if (previousTab === 'todoTab') { switchTab('todoTab', tabs[1], false, true); } else { switchTab('searchTab', tabs[2]); searchLogs(); } } 
       function cancelEditMode() { isEditMode = false; document.getElementById('editModeBar').style.display = 'none'; var btn = document.getElementById('btnSave'); btn.innerText = 'DB에 저장하기'; btn.classList.remove('btn-update'); document.getElementById('editIndex').value = ''; resetEntryForm(); }
       function deleteData() { var index = document.getElementById('editIndex').value; if(!index) return; if(!confirm('정말 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.')) return; var btn = document.getElementById('btnSave'); btn.disabled = true; btn.innerText = "삭제 중..."; gasCall("deleteCsLog", index, function(res){ btn.disabled = false; btn.innerText = "DB에 저장하기"; if(res === "DELETED") { alert("🗑️ 삭제되었습니다."); goBackToList(); } else { alert("오류: " + res); } }); }
       function loadStats() { var start = document.getElementById('statStart').value; var end = document.getElementById('statEnd').value; var hosp = document.getElementById('statHospital').value; var caller = document.getElementById('statCaller').value; var recv = document.getElementById('statReceiver').value; document.getElementById('statLoader').style.display = 'block'; gasCall("getDashboardStats", {startDate: start, endDate: end, hospital: hosp, caller: caller, receiver: recv}, function(stats){ document.getElementById('statLoader').style.display = 'none'; document.getElementById('statTotalCount').innerText = stats.total.toLocaleString() + "건"; document.getElementById('statProcessRate').innerText = stats.rate + "%"; renderChart('chartHospital', 'bar', { labels: stats.topHospitals.map(x => x.label), datasets: [{ label: '문의 건수', data: stats.topHospitals.map(x => x.data), backgroundColor: 'rgba(63, 81, 181, 0.7)', borderColor: 'rgba(63, 81, 181, 1)', borderWidth: 1 }] }, { indexAxis: 'y' }); renderChart('chartCallerGraph', 'bar', { labels: stats.topCallers.map(x => x.label), datasets: [{ label: '문의 건수', data: stats.topCallers.map(x => x.data), backgroundColor: 'rgba(0, 150, 136, 0.7)', borderColor: 'rgba(0, 150, 136, 1)', borderWidth: 1 }] }, { indexAxis: 'y' }); renderChart('chartCategory', 'doughnut', { labels: stats.topCategories.map(x => x.label), datasets: [{ data: stats.topCategories.map(x => x.data), backgroundColor: ['#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3'] }] }); renderChart('chartTrend', 'line', { labels: stats.monthlyTrend.map(x => x.label), datasets: [{ label: '월별 발생 건수', data: stats.monthlyTrend.map(x => x.data), borderColor: '#ff9800', backgroundColor: 'rgba(255, 152, 0, 0.1)', fill: true, tension: 0.3 }] }); }); }
@@ -746,8 +718,8 @@
             document.getElementById('setupOverlay').style.display = 'flex';
         } 
       } 
-      function initData(data) { if(!data || data.error) return alert(data.error); codeData = data; var dataList = document.getElementById('hospital-list'); if (dataList && data.hospitals) { dataList.innerHTML = ''; data.hospitals.forEach(function(h) { var o = document.createElement('option'); o.value = h; dataList.appendChild(o); }); } fillSelect('inDept', [...new Set(data.depts)]); fillSelect('inProduct', [...new Set(data.products)]); fillSelect('inType', [...new Set(data.types)]); }
-      function fillSelect(id, list, selVal) { var sel = document.getElementById(id); if(!sel) return; sel.innerHTML = '<option value="" disabled selected>선택</option>'; list.forEach(v => { var o = document.createElement('option'); o.value=v; o.text=v; if(selVal && v==selVal) o.selected=true; sel.appendChild(o); }); }
+      function initData(data) { if(!data || data.error) return alert(data.error); codeData = data; var dataList = document.getElementById('hospital-list'); if (dataList && data.hospitals) { dataList.innerHTML = ''; data.hospitals.forEach(function(h) { var o = document.createElement('option'); o.value = h; dataList.appendChild(o); }); } fillSelect('inDept', [...new Set(data.depts)]); fillSelect('inProduct', [...new Set(data.products)]); fillSelect('inType', [...new Set(data.types)]); if(data.users) fillSelect('inHandover', [...new Set(data.users)], '', true); }
+      function fillSelect(id, list, selVal, allowEmpty) { var sel = document.getElementById(id); if(!sel) return; sel.innerHTML = allowEmpty ? '<option value="">-없음-</option>' : '<option value="" disabled selected>선택</option>'; list.forEach(v => { var o = document.createElement('option'); o.value=v; o.text=v; if(selVal && v==selVal) o.selected=true; sel.appendChild(o); }); }
       function updateCat1(selVal) { var prod = document.getElementById('inProduct').value; var c1 = document.getElementById('inCat1'); var c2 = document.getElementById('inCat2'); if(!c1 || !c2) return; c1.innerHTML='<option value="" disabled selected>선택</option>'; c1.disabled=true; c2.innerHTML='<option value="" disabled selected>선택</option>'; c2.disabled=true; var filtered = codeData.mapProductToCat1.filter(x => x.key===prod); var list = [...new Set(filtered.map(x=>x.val))]; if(list.length>0) list.forEach(v=>{ var o=document.createElement('option'); o.value=v; o.text=v; if(selVal && v==selVal) o.selected=true; c1.appendChild(o); }); c1.disabled=false; }
       function updateCat2(selVal) { var c1Val = document.getElementById('inCat1').value; var c2 = document.getElementById('inCat2'); if(!c2) return; c2.innerHTML='<option value="" disabled selected>선택</option>'; c2.disabled=true; var filtered = codeData.mapCat1ToCat2.filter(x => x.key===c1Val); var list = [...new Set(filtered.map(x=>x.val))]; if(list.length>0) list.forEach(v=>{ var o=document.createElement('option'); o.value=v; o.text=v; if(selVal && v==selVal) o.selected=true; c2.appendChild(o); }); c2.disabled=false; }
       
@@ -786,7 +758,7 @@
           status: finalStatus, 
           receiver: currentUser, 
           rawContent: rawContentText,
-          devStatus: document.getElementById('inDevStatus').value
+          handover: document.getElementById('inHandover').value
         }; 
         
         var btn = document.getElementById('btnSave'); var orgTxt = btn.innerText; btn.disabled=true; btn.innerText='처리 중...'; 
@@ -812,7 +784,7 @@
         document.getElementById('inHospital').value=''; document.getElementById('inCaller').value=''; document.getElementById('inCallback').value=''; 
         document.getElementById('inDuration').value=''; 
         document.getElementById('inContent').value=''; document.getElementById('inSummary').value=''; document.getElementById('inQuestion').value=''; document.getElementById('inAnswer').value=''; 
-        document.getElementById('chkComplete').checked=false; document.getElementById('inDevStatus').value=''; 
+        document.getElementById('chkComplete').checked=false; document.getElementById('inHandover').value=''; 
         var now = new Date(); var offset = now.getTimezoneOffset() * 60000; var today = new Date(now.getTime() - offset).toISOString().substring(0, 10); 
         document.getElementById('inDate').value = today; document.getElementById('inDept').value = ""; document.getElementById('inProduct').value = ""; document.getElementById('inType').value = ""; 
         var c1 = document.getElementById('inCat1'); var c2 = document.getElementById('inCat2'); c1.innerHTML='<option value="" disabled selected>선택</option>'; c1.disabled=true; c2.innerHTML='<option value="" disabled selected>선택</option>'; c2.disabled=true; 
@@ -820,54 +792,6 @@
         if(isTimerRunning) { clearInterval(timerInterval); isTimerRunning = false; var btn = document.getElementById('btn-timer'); btn.classList.remove('timer-running'); btn.innerText = "timer"; }
         timerSeconds = 0;
       }
-
-      function searchDevLogs() {
-        var s = document.getElementById('devStart').value;
-        var e = document.getElementById('devEnd').value;
-        var recv = document.getElementById('devReceiver').value;
-        var devSt = document.getElementById('devStatusFilter').value;
-        var div = document.getElementById('devResultArea');
-        div.innerHTML = '<div class="progress"><div class="indeterminate indigo"></div></div>';
-        gasCall("searchDevLogs", {startDate: s, endDate: e, receiver: recv, devStatus: devSt}, function(data) {
-          if (!data || data.length === 0) { div.innerHTML = '<p class="center grey-text" style="padding:50px;">조회 결과가 없습니다.</p>'; return; }
-          var devBadgeMap = { '논의필요': 'background:#e3f2fd; color:#1565c0; border:1px solid #90caf9;', '진행확정': 'background:#e8f5e9; color:#2e7d32; border:1px solid #a5d6a7;', '진행불가': 'background:#ffebee; color:#c62828; border:1px solid #ef9a9a;' };
-          var html = '<table class="log-table"><thead><tr><th>병원/날짜</th><th>제품/분류</th><th>내용/답변</th><th style="width:100px; text-align:center;">CS상태</th><th style="width:130px; text-align:center;">개발진행여부</th><th style="width:80px; text-align:center;">등록자</th></tr></thead><tbody>';
-          data.forEach(function(r) {
-            var stClass = r.status.includes('완료') ? 'status-done' : (r.status.includes('임시') ? 'status-temp' : 'status-ing');
-            var devStyle = devBadgeMap[r.devStatus] || 'background:#f5f5f5; color:#616161;';
-            var rowIdx = r.index;
-            var rowStr = safeRowStr(r);
-            html += '<tr style="cursor:pointer;" onclick="loadToEdit(\'' + rowStr + '\', \'devTab\')">' +
-              '<td><b>' + r.hospital + '</b><br><small class="grey-text">' + r.date + '</small></td>' +
-              '<td><small>' + (r.product||'') + '</small><br><small class="grey-text">' + (r.cat1||'') + (r.cat2 ? ' > '+r.cat2 : '') + '</small></td>' +
-              '<td><div style="font-weight:500; font-size:0.9rem; margin-bottom:3px;">Q. ' + (r.content||'') + '</div><div style="color:#558b2f; font-size:0.85rem;">A. ' + (r.answer||'') + '</div></td>' +
-              '<td style="text-align:center;"><span class="status-badge ' + stClass + '">' + r.status + '</span></td>' +
-              '<td style="text-align:center;" onclick="event.stopPropagation()">' +
-                '<select class="browser-default dev-inline-select" data-index="' + rowIdx + '" onchange="updateDevStatusInline(this)" style="height:2.4rem; font-size:0.85rem; border-radius:12px; padding:0 4px; ' + devStyle + '">' +
-                  '<option value="논의필요"' + (r.devStatus==='논의필요'?' selected':'') + '>🔵 논의필요</option>' +
-                  '<option value="진행확정"' + (r.devStatus==='진행확정'?' selected':'') + '>🟢 진행확정</option>' +
-                  '<option value="진행불가"' + (r.devStatus==='진행불가'?' selected':'') + '>🔴 진행불가</option>' +
-                '</select>' +
-              '</td>' +
-              '<td style="text-align:center;"><small>' + (r.receiver||'') + '</small></td>' +
-              '</tr>';
-          });
-          html += '</tbody></table>';
-          div.innerHTML = html;
-        });
-      }
-
-      function updateDevStatusInline(selectEl) {
-        var idx = selectEl.getAttribute('data-index');
-        var newVal = selectEl.value;
-        var devBadgeMap = { '논의필요': 'background:#e3f2fd; color:#1565c0; border:1px solid #90caf9;', '진행확정': 'background:#e8f5e9; color:#2e7d32; border:1px solid #a5d6a7;', '진행불가': 'background:#ffebee; color:#c62828; border:1px solid #ef9a9a;' };
-        selectEl.style.cssText = 'height:2.4rem; font-size:0.85rem; border-radius:12px; padding:0 8px; ' + (devBadgeMap[newVal] || '');
-        gasCall("updateDevStatus", {index: idx, devStatus: newVal}, function(res) {
-          if (res === 'UPDATED') { M.toast({html: '✅ 개발 진행여부가 업데이트되었습니다.', classes: 'rounded green'}); }
-          else { alert("오류: " + res); }
-        });
-      }
-
 
       function closeTempModal() { var instance = M.Modal.getInstance(document.getElementById('modal-temp-save')); if(instance) instance.close(); }
       function discardAndStartNew() { closeTempModal(); var tabs = document.querySelectorAll('.custom-tab'); initAndSwitchToEntry(tabs[0]); setTimeout(function() { var micBtn = document.getElementById('btn-mic-content'); toggleVoice('inContent', 'caption-content', micBtn); M.toast({html: '🎙️ 기존 내용을 지우고 새 녹음을 시작합니다.'}); }, 200); }
