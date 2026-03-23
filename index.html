@@ -238,7 +238,7 @@
     </div>
 
     <!-- 전체 화면 로딩 오버레이 -->
-    <div id="gasLoader" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:99999; background:rgba(255,255,255,0.75); justify-content:center; align-items:center; flex-direction:column;">
+    <div id="gasLoader" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:9998; background:rgba(255,255,255,0.75); justify-content:center; align-items:center; flex-direction:column;">
       <div class="preloader-wrapper big active">
         <div class="spinner-layer spinner-blue-only">
           <div class="circle-clipper left"><div class="circle"></div></div>
@@ -540,7 +540,6 @@
           document.getElementById('btnBreakout').href = document.location.href; 
         }
 
-        checkUser();
         var now = new Date(); var offset = now.getTimezoneOffset() * 60000;
         var today = new Date(now.getTime() - offset).toISOString().substring(0, 10);
         var lastMonth = new Date(new Date().setMonth(now.getMonth()-1) - offset).toISOString().substring(0, 10);
@@ -551,7 +550,7 @@
         document.getElementById('statEnd').value = today;
         document.getElementById('devStart').value = today.substring(0, 4) + "-01-01";
         document.getElementById('devEnd').value = today;
-        gasCall("getInitialData", null, initData);
+        checkUser();
         
         if ('webkitSpeechRecognition' in window) {
           recognition = new webkitSpeechRecognition();
@@ -730,8 +729,8 @@
       function deleteData() { var index = document.getElementById('editIndex').value; if(!index) return; if(!confirm('정말 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.')) return; var btn = document.getElementById('btnSave'); btn.disabled = true; btn.innerText = "삭제 중..."; gasCall("deleteCsLog", index, function(res){ btn.disabled = false; btn.innerText = "DB에 저장하기"; if(res === "DELETED") { alert("🗑️ 삭제되었습니다."); goBackToList(); } else { alert("오류: " + res); } }); }
       function loadStats() { var start = document.getElementById('statStart').value; var end = document.getElementById('statEnd').value; var hosp = document.getElementById('statHospital').value; var caller = document.getElementById('statCaller').value; var recv = document.getElementById('statReceiver').value; document.getElementById('statLoader').style.display = 'block'; gasCall("getDashboardStats", {startDate: start, endDate: end, hospital: hosp, caller: caller, receiver: recv}, function(stats){ document.getElementById('statLoader').style.display = 'none'; document.getElementById('statTotalCount').innerText = stats.total.toLocaleString() + "건"; document.getElementById('statProcessRate').innerText = stats.rate + "%"; renderChart('chartHospital', 'bar', { labels: stats.topHospitals.map(x => x.label), datasets: [{ label: '문의 건수', data: stats.topHospitals.map(x => x.data), backgroundColor: 'rgba(63, 81, 181, 0.7)', borderColor: 'rgba(63, 81, 181, 1)', borderWidth: 1 }] }, { indexAxis: 'y' }); renderChart('chartCallerGraph', 'bar', { labels: stats.topCallers.map(x => x.label), datasets: [{ label: '문의 건수', data: stats.topCallers.map(x => x.data), backgroundColor: 'rgba(0, 150, 136, 0.7)', borderColor: 'rgba(0, 150, 136, 1)', borderWidth: 1 }] }, { indexAxis: 'y' }); renderChart('chartCategory', 'doughnut', { labels: stats.topCategories.map(x => x.label), datasets: [{ data: stats.topCategories.map(x => x.data), backgroundColor: ['#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3'] }] }); renderChart('chartTrend', 'line', { labels: stats.monthlyTrend.map(x => x.label), datasets: [{ label: '월별 발생 건수', data: stats.monthlyTrend.map(x => x.data), borderColor: '#ff9800', backgroundColor: 'rgba(255, 152, 0, 0.1)', fill: true, tension: 0.3 }] }); }); }
       function renderChart(canvasId, type, data, extraOptions) { var ctx = document.getElementById(canvasId).getContext('2d'); if (canvasId === 'chartHospital' && chartHosp) chartHosp.destroy(); if (canvasId === 'chartCategory' && chartCat) chartCat.destroy(); if (canvasId === 'chartTrend' && chartTrend) chartTrend.destroy(); if (canvasId === 'chartCallerGraph' && chartCallerObj) chartCallerObj.destroy(); var config = { type: type, data: data, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: type !== 'bar', position: 'bottom' } }, ...extraOptions } }; var newChart = new Chart(ctx, config); if (canvasId === 'chartHospital') chartHosp = newChart; if (canvasId === 'chartCategory') chartCat = newChart; if (canvasId === 'chartTrend') chartTrend = newChart; if (canvasId === 'chartCallerGraph') chartCallerObj = newChart; }
-      function checkUser() { var saved = localStorage.getItem("csUser"); if(saved) { currentUser = saved; document.getElementById('displayUser').innerText = saved + "님"; document.getElementById('setupOverlay').style.display = 'none'; } else document.getElementById('setupOverlay').style.display = 'flex'; }
-      function saveUser() { var name = document.getElementById('setupName').value.trim(); if(!name) return alert('이름을 입력하세요'); localStorage.setItem("csUser", name); currentUser = name; document.getElementById('displayUser').innerText = name + "님"; document.getElementById('setupOverlay').style.display = 'none'; }
+      function checkUser() { var saved = localStorage.getItem("csUser"); if(saved) { currentUser = saved; document.getElementById('displayUser').innerText = saved + "님"; document.getElementById('setupOverlay').style.display = 'none'; gasCall("getInitialData", null, initData); } else { document.getElementById('setupOverlay').style.display = 'flex'; } }
+      function saveUser() { var name = document.getElementById('setupName').value.trim(); if(!name) return alert('이름을 입력하세요'); localStorage.setItem("csUser", name); currentUser = name; document.getElementById('displayUser').innerText = name + "님"; document.getElementById('setupOverlay').style.display = 'none'; gasCall("getInitialData", null, initData); }
       function resetUser() { 
         if(confirm('사용자를 변경하시겠습니까?\n(현재 작성 중인 내용은 초기화됩니다.)')) { 
             // 1. 저장된 사용자 정보 삭제
