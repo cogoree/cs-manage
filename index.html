@@ -809,12 +809,27 @@
         var trimmed = content.length > MAX_AI_CHARS ? content.substring(0, MAX_AI_CHARS) + '...(이하 생략)' : content;
         var aiBtn = document.getElementById('btn-ai');
         aiBtn.classList.add('loading');
-        gasCall("callGemini", trimmed, function(result){
+        _showGasLoader();
+        fetch(GAS_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({ action: 'callGemini', payload: trimmed })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(res) {
+          _hideGasLoader();
           aiBtn.classList.remove('loading');
-          if(result.startsWith("Error") || result.startsWith("AI 호출") || result.startsWith("❌")) { alert(result); return; }
+          if (res.status !== 'success') { alert("오류: " + res.message); return; }
+          var result = res.data;
+          if(result.startsWith("Error") || result.startsWith("❌")) { alert(result); return; }
           parseAndFillAiResult(result);
           M.toast({html: '✨ AI 분석 및 자동분류가 완료되었습니다!', classes: 'rounded'});
-        }, function(e){ aiBtn.classList.remove('loading'); alert("오류: "+e.message); });
+        })
+        .catch(function(e) {
+          _hideGasLoader();
+          aiBtn.classList.remove('loading');
+          alert("오류: " + e.message);
+        });
       }
       function handleFileUpload(input) { var file = input.files[0]; if(!file) return; if(file.size > 20 * 1024 * 1024) { alert("파일 크기가 너무 큽니다. (20MB 이하 권장)"); input.value = ""; return; } var reader = new FileReader(); var aiBtn = document.getElementById('btn-ai'); aiBtn.classList.add('loading'); M.toast({html: '📂 파일 업로드 중...'}); reader.onload = function(e) { var base64Data = e.target.result.split(',')[1]; var mimeType = file.type; var audioPayload = { mimeType: mimeType, data: base64Data }; gasCall("callGemini", audioPayload, function(result){ aiBtn.classList.remove('loading'); input.value = ""; if(result.startsWith("Error") || result.startsWith("AI 호출") || result.startsWith("❌")) { alert(result); return; } document.getElementById('inContent').value = "[📂 오디오 파일 분석 결과]\n파일명: " + file.name; parseAndFillAiResult(result); alert("✨ 녹음 파일 분석 완료!"); }, function(e){ aiBtn.classList.remove('loading'); input.value=""; alert("오류: "+e.message); }); }; reader.readAsDataURL(file); }
       
