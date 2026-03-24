@@ -292,7 +292,7 @@ function callGemini(input) {
   if (!cleanKey || cleanKey.includes("API_KEY")) return "Error: API Key Check";
 
   // ✅ 수정 1: 올바른 모델명으로 변경
-  var modelName = "gemini-2.5-flash";
+  var modelName = "gemini-2.0-flash";
   var url = "https://generativelanguage.googleapis.com/v1beta/models/" + modelName + ":generateContent?key=" + cleanKey;
   
   var userContent = []; 
@@ -350,7 +350,7 @@ function generateFaqByAI(question, answer, product, hospital, caller) {
   var cleanKey = GEMINI_API_KEY.trim();
   if (!cleanKey || cleanKey.includes("API_KEY")) return "Error: API Key Check";
 
-  var modelName = "gemini-2.5-flash"; 
+  var modelName = "gemini-2.0-flash"; 
   var url = "https://generativelanguage.googleapis.com/v1beta/models/" + modelName + ":generateContent?key=" + cleanKey;
   
   var promptText = "너는 고객지원(CS) 전문가야. 다음은 고객의 문의 내용과 상담원의 짧은 조치 결과(메모)야.\n" +
