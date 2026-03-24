@@ -1,7 +1,7 @@
 var DB_SHEET_NAME = "CS DB";
 var CODE_SHEET_CANDIDATES = ["code", "코드", "db", "data"];
 
-var GEMINI_API_KEY = "AIzaSyB8oiaS48sDCPOhkn8SXd4BuRSrGz8Ce80"; //AIzaSyCo5wQRAdasPxcmR5mKhCCynZfFZzN6kho(기존)
+var GEMINI_API_KEY = PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY');
 
 function doGet(e) {
   if (e.parameter && e.parameter.action) {
