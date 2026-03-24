@@ -821,6 +821,7 @@
           aiBtn.classList.remove('loading');
           if (res.status !== 'success') { alert("오류: " + res.message); return; }
           var result = res.data;
+          console.log("AI 응답:", result);
           if(result.startsWith("Error") || result.startsWith("❌")) { alert(result); return; }
           parseAndFillAiResult(result);
           M.toast({html: '✨ AI 분석 및 자동분류가 완료되었습니다!', classes: 'rounded'});
