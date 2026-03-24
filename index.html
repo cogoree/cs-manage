@@ -544,7 +544,7 @@
           if (document.body.contains(script)) document.body.removeChild(script);
           var err = new Error('요청 시간 초과');
           if (onFailure) onFailure(err); else alert("오류: " + err.message);
-        }, 30000);
+        }, 60000);
 
         window[cbName] = function(res) {
           _hideGasLoader();
