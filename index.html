@@ -756,7 +756,7 @@
           M.textareaAutoResize(el);
           M.toast({html: '📞 통화 내용이 자동 입력되었습니다!', classes: 'rounded'});
         } else {
-          M.toast({html: '⚠ 음성 인식 결과가 없습니다 (녹음 음량 확인)', classes: 'rounded orange darken-2'});
+          M.toast({html: '⚠ 음성 인식 결과 없음 — 트레이 로그 확인', classes: 'rounded orange darken-2'});
         }
         if (data.duration > 0) {
           document.getElementById('inDuration').value = Math.ceil(data.duration / 60);
