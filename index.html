@@ -680,10 +680,16 @@
       var LOCAL_PORT       = 7789;
       var _localConnected  = false;
       var _prevStatus      = 'idle';
+      var _prevCallId      = 0;      // 통화별 고유 번호 — done 중복 수신 방지
+      var _activeCallId    = -1;     // 현재 진행 중인 통화 ID (폼 초기화 중복 방지)
 
       function startLocalPolling() {
         setInterval(checkLocalStatus, 1500);
         checkLocalStatus();
+        // 탭이 백그라운드에서 포그라운드로 돌아올 때 즉시 폴링 (Chrome throttle 우회)
+        document.addEventListener('visibilitychange', function() {
+          if (!document.hidden) checkLocalStatus();
+        });
       }
 
       function checkLocalStatus() {
@@ -696,14 +702,19 @@
             }
             updateLocalIndicator(data);
 
-            // 통화 감지 시 자동으로 상담 등록 탭으로 이동
-            if (data.status === 'recording' && _prevStatus === 'idle') {
+            // 통화 감지 시 자동으로 상담 등록 탭으로 이동 + 폼 초기화
+            // call_id 기준으로 추적 — 페이지 로드 시점(detected/recording/processing 어느 단계든)에도 동작
+            if ((data.status === 'detected' || data.status === 'recording' || data.status === 'processing')
+                && data.call_id !== _activeCallId) {
+              _activeCallId = data.call_id;
               var entryTabEl = document.querySelector('.custom-tab[onclick*="entryTab"]');
               if (entryTabEl) initAndSwitchToEntry(entryTabEl);
             }
 
             // 통화 종료 후 결과 도착 시 자동 입력
-            if (data.status === 'done' && _prevStatus !== 'done') {
+            // call_id 비교: 같은 통화 done은 한 번만 처리 (중복 방지)
+            if (data.status === 'done' && data.call_id !== _prevCallId) {
+              _prevCallId = data.call_id;
               fetchLocalResult();
             }
 
@@ -743,12 +754,14 @@
           var el = document.getElementById('inContent');
           el.value = data.transcript;
           M.textareaAutoResize(el);
+          M.toast({html: '📞 통화 내용이 자동 입력되었습니다!', classes: 'rounded'});
+        } else {
+          M.toast({html: '⚠ 음성 인식 결과가 없습니다 (녹음 음량 확인)', classes: 'rounded orange darken-2'});
         }
         if (data.duration > 0) {
           document.getElementById('inDuration').value = Math.ceil(data.duration / 60);
           if (!isTimerRunning) timerSeconds = data.duration;
         }
-        M.toast({html: '📞 통화 내용이 자동 입력되었습니다!', classes: 'rounded'});
       }
 
       function updateLocalIndicator(data) {
@@ -758,6 +771,7 @@
 
         var cfg = {
           idle       : { color: '#64748b', label: '대기중',    blink: false },
+          detected   : { color: '#f97316', label: '통화감지',   blink: true  },
           recording  : { color: '#ef4444', label: '녹음중',    blink: true  },
           processing : { color: '#f59e0b', label: 'STT 처리중', blink: true  },
           done       : { color: '#22c55e', label: '완료',      blink: false },
