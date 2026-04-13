@@ -392,7 +392,7 @@
                   <i id="btn-ai" class="material-icons ai-btn" onclick="requestAiSummary()" title="AI 분석 실행 (자동 분류 포함)">auto_fix_high</i>
                   <span id="caption-content" class="live-caption"></span>
                 </div>
-                <textarea id="inContent" class="custom-textarea" placeholder="내용 입력"></textarea>
+                <textarea id="inContent" class="custom-textarea" placeholder="내용 입력" oninput="_contentUserEdited=true"></textarea>
               </div>
               <div class="form-group"><label class="custom-label" style="color:#7b1fa2;">2. AI 요약</label><textarea id="inSummary" class="custom-textarea" placeholder="AI 요약 결과"></textarea></div>
               <div class="form-group"><label class="custom-label" style="color:#283593;">3. 핵심 질문 (J열 저장)</label><textarea id="inQuestion" class="custom-textarea" placeholder="AI가 추출한 질문"></textarea></div>
@@ -533,7 +533,7 @@
         }
       }
 
-      function gasCall(action, payload, onSuccess, onFailure) {
+      function gasCall(action, payload, onSuccess, onFailure, timeoutMs) {
         // CORS 우회: JSONP 방식 (GET 요청은 CORS 제한 없음)
         _showGasLoader();
         var cbName = 'cb_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
@@ -544,7 +544,7 @@
           if (document.body.contains(script)) document.body.removeChild(script);
           var err = new Error('요청 시간 초과');
           if (onFailure) onFailure(err); else alert("오류: " + err.message);
-        }, 60000);
+        }, timeoutMs || 60000);
 
         window[cbName] = function(res) {
           _hideGasLoader();
@@ -677,11 +677,12 @@
       });
       
       // ====== Python 로컬 서버 연동 (창 비활성화 시에도 녹음/STT 동작) ======
-      var LOCAL_PORT       = 7789;
-      var _localConnected  = false;
-      var _prevStatus      = 'idle';
-      var _prevCallId      = 0;      // 통화별 고유 번호 — done 중복 수신 방지
-      var _activeCallId    = -1;     // 현재 진행 중인 통화 ID (폼 초기화 중복 방지)
+      var LOCAL_PORT         = 7789;
+      var _localConnected    = false;
+      var _prevStatus        = 'idle';
+      var _prevCallId        = 0;      // 통화별 고유 번호 — done 중복 수신 방지
+      var _activeCallId      = -1;     // 현재 진행 중인 통화 ID (폼 초기화 중복 방지)
+      var _contentUserEdited = false;  // 사용자가 직접 입력했으면 true → 덮어쓰기 모달 표시
 
       function startLocalPolling() {
         setInterval(checkLocalStatus, 1500);
@@ -737,7 +738,9 @@
             if (!data.transcript && !data.duration) return;
             _pendingSttData = data;
             var existing = (document.getElementById('inContent').value || '').trim();
-            if (existing) {
+            // 사용자가 직접 입력한 내용이 있을 때만 덮어쓰기 확인 모달 표시
+            // 이전 STT 자동입력값이나 빈 폼이면 바로 적용
+            if (existing && _contentUserEdited) {
               M.Modal.getInstance(document.getElementById('modal-stt-overwrite')).open();
             } else {
               applySttResult();
@@ -750,6 +753,7 @@
         if (!_pendingSttData) return;
         var data = _pendingSttData;
         _pendingSttData = null;
+        _contentUserEdited = false;  // STT 자동입력 후 플래그 초기화
         if (data.transcript && data.transcript.trim()) {
           var el = document.getElementById('inContent');
           el.value = data.transcript;
@@ -846,7 +850,7 @@
           alert("오류: " + e.message);
         });
       }
-      function handleFileUpload(input) { var file = input.files[0]; if(!file) return; if(file.size > 20 * 1024 * 1024) { alert("파일 크기가 너무 큽니다. (20MB 이하 권장)"); input.value = ""; return; } var reader = new FileReader(); var aiBtn = document.getElementById('btn-ai'); aiBtn.classList.add('loading'); M.toast({html: '📂 파일 업로드 중...'}); reader.onload = function(e) { var base64Data = e.target.result.split(',')[1]; var mimeType = file.type; var audioPayload = { mimeType: mimeType, data: base64Data }; gasCall("callGemini", audioPayload, function(result){ aiBtn.classList.remove('loading'); input.value = ""; if(result.startsWith("Error") || result.startsWith("AI 호출") || result.startsWith("❌")) { alert(result); return; } document.getElementById('inContent').value = "[📂 오디오 파일 분석 결과]\n파일명: " + file.name; parseAndFillAiResult(result); alert("✨ 녹음 파일 분석 완료!"); }, function(e){ aiBtn.classList.remove('loading'); input.value=""; alert("오류: "+e.message); }); }; reader.readAsDataURL(file); }
+      function handleFileUpload(input) { var file = input.files[0]; if(!file) return; if(file.size > 20 * 1024 * 1024) { alert("파일 크기가 너무 큽니다. (20MB 이하 권장)"); input.value = ""; return; } var reader = new FileReader(); var aiBtn = document.getElementById('btn-ai'); aiBtn.classList.add('loading'); M.toast({html: '📂 파일 업로드 중...'}); reader.onload = function(e) { var base64Data = e.target.result.split(',')[1]; var mimeType = file.type; var audioPayload = { mimeType: mimeType, data: base64Data }; gasCall("callGemini", audioPayload, function(result){ aiBtn.classList.remove('loading'); input.value = ""; if(result.startsWith("Error") || result.startsWith("AI 호출") || result.startsWith("❌")) { alert(result); return; } document.getElementById('inContent').value = "[📂 오디오 파일 분석 결과]\n파일명: " + file.name; parseAndFillAiResult(result); alert("✨ 녹음 파일 분석 완료!"); }, function(e){ aiBtn.classList.remove('loading'); input.value=""; alert("오류: "+e.message); }, 90000); }; reader.readAsDataURL(file); }
       
       function fuzzySelect(selectId, targetText) { if (!targetText || targetText.trim() === "" || targetText.includes("알수없음")) return false; var sel = document.getElementById(selectId); if (!sel) return false; var t = targetText.toLowerCase().replace(/\s/g, ''); for (var i = 0; i < sel.options.length; i++) { var optVal = sel.options[i].value.toLowerCase().replace(/\s/g, ''); if (optVal && (optVal.includes(t) || t.includes(optVal))) { sel.selectedIndex = i; return true; } } return false; }
       function cleanText(str) { return str ? str.replace(/\*\*/g, '').trim() : ""; }
@@ -1010,8 +1014,9 @@
         } 
       }
       
-      function resetEntryForm() { 
-        document.getElementById('inHospital').value=''; document.getElementById('inCaller').value=''; document.getElementById('inCallback').value=''; 
+      function resetEntryForm() {
+        _contentUserEdited = false;
+        document.getElementById('inHospital').value=''; document.getElementById('inCaller').value=''; document.getElementById('inCallback').value='';
         document.getElementById('inDuration').value=''; 
         document.getElementById('inContent').value=''; document.getElementById('inSummary').value=''; document.getElementById('inQuestion').value=''; document.getElementById('inAnswer').value=''; 
         document.getElementById('chkComplete').checked=false; document.getElementById('inDevStatus').value=''; document.getElementById('inHandover').value=''; 
