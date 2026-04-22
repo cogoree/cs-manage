@@ -1088,9 +1088,21 @@
           rawContent: rawContentText,
           devStatus: document.getElementById('inDevStatus').value,
           handover: document.getElementById('inHandover').value
-        }; 
-        
-        var btn = document.getElementById('btnSave'); var orgTxt = btn.innerText; btn.disabled=true; btn.innerText='처리 중...'; 
+        };
+
+        // JSONP는 GET 방식이므로 URL 길이 한도 초과 시 rawContent 자동 축약
+        // 한글 1자 → URL 인코딩 9자, GAS 처리 가능 URL 상한 ~6000자 기준
+        if (form.rawContent) {
+          var approxBaseLen = encodeURIComponent(JSON.stringify(Object.assign({}, form, {rawContent: ''}))).length + GAS_URL.length + 100;
+          var maxRawUrlChars = Math.max(0, 6000 - approxBaseLen);
+          var maxRawChars = Math.floor(maxRawUrlChars / 9);
+          if (form.rawContent.length > maxRawChars) {
+            form.rawContent = form.rawContent.substring(0, Math.max(0, maxRawChars)) + '\n...(통화 내용 길이 초과로 일부 생략됨)';
+            M.toast({html: '⚠️ 통화 내용이 길어 일부 생략 후 저장됩니다', classes: 'rounded'});
+          }
+        }
+
+        var btn = document.getElementById('btnSave'); var orgTxt = btn.innerText; btn.disabled=true; btn.innerText='처리 중...';
         gasCall(isEditMode ? "updateCsLog" : "saveCsLog", form, afterSave);
         
         function afterSave(res) { 
