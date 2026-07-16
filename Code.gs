@@ -6,11 +6,13 @@ var GEMINI_API_KEY = PropertiesService.getScriptProperties().getProperty('GEMINI
 function doGet(e) {
   if (e.parameter && e.parameter.action) {
     var action = e.parameter.action;
-    var payload = e.parameter.payload ? JSON.parse(e.parameter.payload) : null;
-    var callback = e.parameter.callback || 'callback';
+    // 콜백명은 영문/숫자/_만 허용 (JSONP 응답에 임의 스크립트 주입 방지)
+    var callback = String(e.parameter.callback || 'callback').replace(/[^\w$]/g, '');
     var result;
 
     try {
+      // JSON.parse를 try 안에서 수행 — 깨진 payload여도 정상적인 JSONP 에러 응답 반환
+      var payload = e.parameter.payload ? JSON.parse(e.parameter.payload) : null;
       switch(action) {
         case 'getInitialData': result = getInitialData(); break;
         case 'saveCsLog': result = saveCsLog(payload); break;
@@ -76,7 +78,10 @@ function saveCsLog(form) {
   var dbSheet = ss.getSheetByName(DB_SHEET_NAME);
   if (!dbSheet) return "오류: 'CS DB' 시트가 없습니다.";
 
+  // 동시 저장 시 같은 index가 두 번 발급되는 것 방지 (index 중복 = 수정/삭제가 남의 행을 건드림)
+  var lock = LockService.getScriptLock();
   try {
+    lock.waitLock(10000);
     var lastRow = dbSheet.getLastRow();
     var newIndex = 1;
     if (lastRow > 1) {
@@ -94,6 +99,7 @@ function saveCsLog(form) {
     dbSheet.appendRow(rowData);
     return "SUCCESS";
   } catch (e) { return "에러: " + e.toString(); }
+  finally { try { lock.releaseLock(); } catch (e2) {} }
 }
 
 function updateCsLog(form) {
@@ -208,14 +214,17 @@ function getMyTodoList(user) {
     if (!status.includes('완료') && (receiver === user || handover === user)) {
       var rowDate = row[1];
       var dTime = (rowDate instanceof Date) ? rowDate : new Date(rowDate);
-      dTime.setHours(0,0,0,0);
-      var diffTime = today.getTime() - dTime.getTime();
-      var diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)); 
-      var dTag = "D+" + diffDays;
-      if (diffDays === 0) dTag = "오늘";
+      var dTag = "-";
+      var dateStr = "";
+      if (!isNaN(dTime.getTime())) {
+        dTime.setHours(0,0,0,0);
+        var diffDays = Math.floor((today.getTime() - dTime.getTime()) / (1000 * 60 * 60 * 24));
+        dTag = (diffDays === 0) ? "오늘" : "D+" + diffDays;
+        dateStr = Utilities.formatDate(dTime, "Asia/Seoul", "yyyy-MM-dd");
+      }
 
       results.push({
-        index: row[0], date: Utilities.formatDate(dTime, "Asia/Seoul", "yyyy-MM-dd"), 
+        index: row[0], date: dateStr,
         hospital: row[2], product: row[3], caller: row[5], type: row[6],
         content: row[9], answer: row[10], status: status, receiver: receiver,
         dTag: dTag, cat1: row[7], cat2: row[8], dept: row[4], duration: row[13], callback: row[14],
